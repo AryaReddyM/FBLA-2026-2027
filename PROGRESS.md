@@ -19,6 +19,12 @@ All features in CLAUDE.md §8 are implemented (M0–M7, plus the §8.10 Impact c
 | M8 | Review | 🟡 E2E + axe suite: 36/36 pass (0 serious/critical violations on every page, incl. high contrast + dark + 150% text; phone layout). Lighthouse not run yet |
 | M9 | Deploy | ⏳ Vercel + Supabase cloud (README has the steps) |
 
+## Started fresh (Oct 28, 2026)
+
+- Owner chose to use the existing Supabase project for real data. All 311 practice items, loans, reports and history were removed with the new admin-only **Start fresh** function (`20261028000300_clear_inventory.sql`, button in Settings → Institution, type DELETE to confirm). Accounts (5), locations (14) and categories (14) were kept.
+- `.env.local` now has `DEMO_MODE=false`: no demo logins on the sign-in page, no "Demo data" label, no Reset demo data button, and `db:seed` refuses to run.
+- ⚠️ The E2E workflow tests create real records and expect demo data. Don't run `npm run test:e2e` against this database; use a separate demo project (`DEMO_MODE=true`) for testing and FBLA judging.
+
 ## Staff can add items · tracking metrics · more accessibility (Oct 28, 2026)
 
 - **Staff can add items** (owner decision; CLAUDE.md §7 table updated). Migration `20261028000200_staff_can_add_items.sql`: staff may insert assets and edit/photo the ones they added; retiring, marking lost and deleting stay admin/manager-only (trigger), and bulk actions, import and settings are unchanged. Live RLS tests and PGlite checks (62/62) cover it.

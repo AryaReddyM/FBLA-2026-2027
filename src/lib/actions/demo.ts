@@ -6,7 +6,9 @@ import { fail, ok, type ActionResult } from "@/lib/action-result"
 import { getCurrentUser } from "@/lib/auth"
 import { DEMO_ACCOUNTS, isDemoResetEnabled } from "@/lib/config"
 import { generateDemoData } from "@/lib/demo/generate"
+import { removeAllStoredFiles } from "@/lib/storage-cleanup"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { createClient } from "@/lib/supabase/server"
 
 /**
  * Admin-only "Reset demo data": wipes inventory, loans, reports and the audit
@@ -37,16 +39,30 @@ export async function resetDemoData(): Promise<ActionResult<{ assets: number; ch
   if (error) return fail(`Reset failed: ${error.message}`)
 
   // Uploaded photos and stored report files belonged to the old data.
-  for (const bucket of ["asset-photos", "reports"] as const) {
-    const { data: folders } = await admin.storage.from(bucket).list("", { limit: 1000 })
-    for (const folder of folders ?? []) {
-      const { data: files } = await admin.storage.from(bucket).list(folder.name, { limit: 1000 })
-      const paths = (files ?? []).map((f) => `${folder.name}/${f.name}`)
-      if (paths.length) await admin.storage.from(bucket).remove(paths)
-    }
-  }
+  await removeAllStoredFiles()
 
   revalidatePath("/", "layout")
   const counts = (data ?? {}) as { assets?: number; checkouts?: number }
   return ok({ assets: counts.assets ?? 0, checkouts: counts.checkouts ?? 0 })
+}
+
+/**
+ * Admin-only "Start fresh": deletes every item, loan, saved report and history
+ * entry so the school starts with an empty catalog. Accounts, locations and
+ * categories are kept. Unlike demo reset, this works in every project.
+ */
+export async function startFresh(confirmation: string): Promise<ActionResult<{ removed: number }>> {
+  const user = await getCurrentUser()
+  if (user.role !== "admin") return fail("Only admins can clear the inventory.")
+  if (confirmation.trim().toUpperCase() !== "DELETE") return fail("Type DELETE to confirm.")
+
+  // The user's own client: the database function re-checks that they're an admin.
+  const supabase = await createClient()
+  const { data, error } = await supabase.rpc("admin_clear_inventory")
+  if (error) return fail(`Couldn't clear the inventory: ${error.message}`)
+  await removeAllStoredFiles()
+
+  revalidatePath("/", "layout")
+  const result = (data ?? {}) as { assets_removed?: number }
+  return ok({ removed: result.assets_removed ?? 0 })
 }

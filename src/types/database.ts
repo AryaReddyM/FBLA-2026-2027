@@ -223,7 +223,10 @@ isOneToOne: false
             [_ in never]: never
           }
           Functions: {
-            "admin_load_demo_data":
+            "admin_clear_inventory":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"admin_load_demo_data":
 { Args: { "p": Json }; Returns: Json
                            },
 "borrower_label":

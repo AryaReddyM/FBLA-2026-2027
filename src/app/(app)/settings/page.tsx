@@ -4,11 +4,13 @@ import { Suspense } from "react"
 import { PageContainer, PageHeader } from "@/components/layout/page-header"
 import { InstitutionForm } from "@/components/settings/institution-form"
 import { ResetDemoButton } from "@/components/settings/reset-demo-button"
+import { StartFreshButton } from "@/components/settings/start-fresh-button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { requirePermission } from "@/lib/auth"
 import { isDemoResetEnabled } from "@/lib/config"
 import { getInstitution } from "@/lib/queries/settings"
+import { createClient } from "@/lib/supabase/server"
 
 export const metadata: Metadata = { title: "Institution settings" }
 
@@ -29,7 +31,11 @@ export default function SettingsPage() {
 
 async function Settings() {
   await requirePermission("settings.institution")
-  const institution = await getInstitution()
+  const supabase = await createClient()
+  const [institution, { count: itemCount }] = await Promise.all([
+    getInstitution(),
+    supabase.from("assets").select("id", { count: "exact", head: true }),
+  ])
   return (
     <>
       <Card>
@@ -62,6 +68,22 @@ async function Settings() {
           </CardContent>
         </Card>
       ) : null}
+
+      <Card className="border-destructive/40">
+        <CardHeader>
+          <CardTitle>Start fresh</CardTitle>
+          <CardDescription>
+            Delete every item, loan, saved report and activity entry to begin with an empty catalog (for example, after
+            trying EduTrack with practice data). Accounts, locations and categories are kept.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-wrap items-center gap-3">
+          <StartFreshButton itemCount={itemCount ?? 0} />
+          <span className="text-sm text-muted-foreground">
+            {(itemCount ?? 0).toLocaleString("en-US")} item{itemCount === 1 ? "" : "s"} in the catalog now.
+          </span>
+        </CardContent>
+      </Card>
     </>
   )
 }
