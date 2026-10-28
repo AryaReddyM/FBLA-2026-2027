@@ -23,8 +23,8 @@ type Props = {
 }
 
 /**
- * One single-series bar chart with a "View as table" switch (CLAUDE.md §9:
- * charts must have a table fallback for screen readers and for reading exact
+ * One single-series bar chart with a "View as table" switch (charts must
+ * have a table fallback for screen readers and for reading exact
  * values). Single series = one color and no legend; the title says what it is.
  */
 export function BarChartCard({ title, description, data, valueLabel, orientation = "vertical", emptyText = "No data yet." }: Props) {

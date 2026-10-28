@@ -3,9 +3,6 @@
 -- Retiring, marking lost and deleting stay admin/manager-only, enforced by the
 -- trigger below because RLS can't restrict which columns change.
 
--- ---------------------------------------------------------------------------
--- assets
--- ---------------------------------------------------------------------------
 drop policy "assets: admins and managers insert" on public.assets;
 drop policy "assets: admins and managers update" on public.assets;
 
@@ -54,9 +51,6 @@ create trigger protect_asset_changes
   before update on public.assets
   for each row execute function public.protect_asset_changes();
 
--- ---------------------------------------------------------------------------
--- digital_licenses (license details of a digital item)
--- ---------------------------------------------------------------------------
 drop policy "licenses: admins and managers insert" on public.digital_licenses;
 drop policy "licenses: admins and managers update" on public.digital_licenses;
 
@@ -87,9 +81,7 @@ create policy "licenses: admins and managers, or staff for their own items, upda
     )
   );
 
--- ---------------------------------------------------------------------------
 -- Photos: staff may add photos to items they added (folder = asset id).
--- ---------------------------------------------------------------------------
 create policy "asset photos: staff upload for their own items"
   on storage.objects for insert to authenticated
   with check (

@@ -6,7 +6,6 @@ export function LogoMark({ className, onDark }: { className?: string; onDark?: b
   return (
     <svg viewBox="0 0 32 32" aria-hidden="true" className={cn("size-8 shrink-0", className)} fill="none">
       <rect width="32" height="32" rx="9" className={onDark ? "fill-lime" : "fill-primary"} />
-      {/* A box with a check: "everything accounted for" */}
       <path
         d="M9 12.5 16 9l7 3.5v8L16 24l-7-3.5v-8Z"
         className={onDark ? "stroke-lime-foreground" : "stroke-primary-foreground"}

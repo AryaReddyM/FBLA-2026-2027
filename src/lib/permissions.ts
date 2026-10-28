@@ -1,4 +1,4 @@
-// Mirrors the permissions table in CLAUDE.md §7 so the UI can hide buttons a
+// Mirrors the role permissions table so the UI can hide buttons a
 // user can't use. This is convenience only: RLS policies in the database are
 // what actually enforce it.
 

@@ -60,7 +60,7 @@ export function ReportPreview({ data, durationMs }: { data: ReportData; duration
               {data.period} · {data.scope} · prepared {formatDateTime(data.generatedAt)} for {data.generatedBy}
             </CardDescription>
           </div>
-          {/* Generation time on screen (CLAUDE.md §8.7), to show the speed-up the paper measured. */}
+          {/* Generation time on screen, to show the speed-up the paper measured. */}
           <p
             className="inline-flex items-center gap-1.5 rounded-full border bg-success-soft px-3 py-1 text-sm font-medium text-success"
             role="status"

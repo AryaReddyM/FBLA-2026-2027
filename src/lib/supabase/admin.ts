@@ -7,7 +7,7 @@ import type { Database } from "@/types/database"
 
 /**
  * Service-role client. It BYPASSES Row Level Security, so it is only used
- * server-side for admin tasks (creating user accounts, resetting demo data),
+ * server-side for admin tasks (creating user accounts, clearing stored files),
  * always after the caller's own role has been checked.
  * The "server-only" import makes the build fail if a client component imports this.
  */

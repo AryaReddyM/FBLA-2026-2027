@@ -4,7 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 
 /**
  * Deletes every uploaded photo and saved report file. Used when the inventory
- * is wiped (demo reset, Start fresh), since those files belonged to items and
+ * is wiped (Start fresh), since those files belonged to items and
  * reports that no longer exist. Files live in <folder>/<file>, one level deep.
  */
 export async function removeAllStoredFiles() {

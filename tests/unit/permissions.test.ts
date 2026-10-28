@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest"
 
 import { can, canEditAsset, type Permission, type Role } from "@/lib/permissions"
 
-// The table from CLAUDE.md §7, written out independently so a change to
-// permissions.ts that doesn't match the spec fails this test.
+// The role permissions table, written out independently so a change to
+// permissions.ts that doesn't match the intended rules fails this test.
 const EXPECTED: Record<Permission, Role[]> = {
   "catalog.view": ["admin", "manager", "staff", "viewer"],
   "circulation.use": ["admin", "manager", "staff"],

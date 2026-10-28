@@ -149,7 +149,7 @@ export function AssetForm({
     startTransition(async () => {
       const raw = getValues()
 
-      // Duplicate check before creating (CLAUDE.md §8.3): warn instead of silently saving.
+      // Duplicate check before creating: warn instead of silently saving.
       if (mode === "create" && !acknowledged.current.has(dupKey(raw))) {
         const check = await findDuplicates({
           serial_number: raw.serial_number,

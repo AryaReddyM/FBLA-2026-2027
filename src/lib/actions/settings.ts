@@ -27,8 +27,6 @@ async function requireAdmin() {
   return user.role === "admin" ? user : null
 }
 
-// --- Institution ---------------------------------------------------------
-
 export async function updateInstitution(input: InstitutionInput): Promise<ActionResult> {
   if (!(await requireAdmin())) return fail("Only admins can change institution settings.")
   const parsed = institutionSchema.safeParse(input)
@@ -40,8 +38,6 @@ export async function updateInstitution(input: InstitutionInput): Promise<Action
   revalidatePath("/", "layout")
   return ok()
 }
-
-// --- Categories ----------------------------------------------------------
 
 export async function saveCategory(input: CategoryInput): Promise<ActionResult<{ id: string }>> {
   const user = await getCurrentUser()
@@ -75,8 +71,6 @@ export async function deleteCategory(categoryId: string): Promise<ActionResult> 
   return ok()
 }
 
-// --- Locations -----------------------------------------------------------
-
 export async function saveLocation(input: LocationInput): Promise<ActionResult<{ id: string }>> {
   const user = await getCurrentUser()
   if (!can(user.role, "settings.catalog")) return fail("Only admins can manage locations.")
@@ -107,8 +101,6 @@ export async function deleteLocation(locationId: string): Promise<ActionResult> 
   revalidatePath("/settings/locations")
   return ok()
 }
-
-// --- Users ---------------------------------------------------------------
 
 /**
  * Admins create accounts directly (with a starting password), so staff can
@@ -171,8 +163,6 @@ export async function setUserPassword(userId: string, password: string): Promise
   if (error) return fail(error.message)
   return ok()
 }
-
-// --- My profile ----------------------------------------------------------
 
 export async function updateMyProfile(input: ProfileInput): Promise<ActionResult> {
   const user = await getCurrentUser()

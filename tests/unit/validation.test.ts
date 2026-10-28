@@ -93,7 +93,7 @@ describe("circulation", () => {
 
 describe("settings", () => {
   it("asset tag prefix is 2–8 capitals or digits", () => {
-    const base = { name: "Lincoln HS", default_loan_days: "14", fiscal_year_start_month: "7" }
+    const base = { name: "Central High School", default_loan_days: "14", fiscal_year_start_month: "7" }
     expect(institutionSchema.safeParse({ ...base, asset_tag_prefix: "lhs" }).success).toBe(true)
     expect(institutionSchema.safeParse({ ...base, asset_tag_prefix: "L" }).success).toBe(false)
     expect(institutionSchema.safeParse({ ...base, asset_tag_prefix: "TOO-LONG-1" }).success).toBe(false)

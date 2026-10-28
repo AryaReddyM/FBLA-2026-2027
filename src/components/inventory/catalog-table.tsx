@@ -340,7 +340,6 @@ export function CatalogTable({ rows, params, sort, dir, canEdit, locations }: Pr
         </Table>
       </div>
 
-      {/* Phones: each item becomes a card. */}
       <ul className={cn("grid gap-2 md:hidden", pending && "opacity-60")} aria-label="Inventory items">
         {rows.map((item) => (
           <li key={item.id} className="rounded-xl border bg-card p-3">

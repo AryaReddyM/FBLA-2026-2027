@@ -18,7 +18,6 @@ import { cn } from "@/lib/utils"
 type Props = {
   user: { name: string; email: string; role: Role }
   institutionName: string
-  demo: boolean
 }
 
 const linkClass = (active: boolean) =>
@@ -32,7 +31,7 @@ const linkClass = (active: boolean) =>
  * with each page's hero band below it, so the two read as one header. Links a
  * role can't use are hidden (RLS still enforces the rules on the server).
  */
-export function TopNav({ user, institutionName, demo }: Props) {
+export function TopNav({ user, institutionName }: Props) {
   const pathname = usePathname()
   const [mobileOpen, setMobileOpen] = useState(false)
   const primary = PRIMARY_NAV.filter((i) => !i.permission || can(user.role, i.permission))
@@ -150,14 +149,6 @@ export function TopNav({ user, institutionName, demo }: Props) {
 
         <div className="ml-auto flex min-w-0 items-center gap-2">
           <GlobalSearch onDark />
-          {demo ? (
-            <span
-              className="hidden rounded-full border border-lime/50 bg-lime/10 px-2.5 py-1 text-xs font-semibold whitespace-nowrap text-lime 2xl:inline"
-              title="This is the FBLA demo project with fictional data"
-            >
-              Demo data
-            </span>
-          ) : null}
           <UserMenu name={user.name} email={user.email} role={user.role} onDark />
         </div>
       </div>

@@ -15,7 +15,7 @@ create table public.institution_settings (
   id uuid primary key default gen_random_uuid(),
   -- Only one row may ever exist: the unique + check pair makes a second insert fail.
   singleton boolean not null default true unique check (singleton),
-  name text not null default 'Lincoln High School',
+  name text not null default 'My School',
   logo_path text,
   fiscal_year_start_month smallint not null default 7 check (fiscal_year_start_month between 1 and 12),
   asset_tag_prefix text not null default 'EDU' check (asset_tag_prefix ~ '^[A-Z0-9]{2,8}$'),
@@ -188,7 +188,7 @@ create table public.report_runs (
 
 create index report_runs_created_idx on public.report_runs (created_at desc);
 
--- Timing samples for the "Impact" card (section 8.10): how long searches,
+-- Timing samples for the "Impact" card: how long searches,
 -- registrations and reports take, the same measures the research paper used.
 create table public.metric_events (
   id uuid primary key default gen_random_uuid(),

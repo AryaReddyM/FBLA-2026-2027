@@ -22,7 +22,6 @@ type Props = {
   values: { location_id?: string; from?: string; to?: string }
 }
 
-/** Filters for the selected report (kept in the URL) and the export buttons. */
 export function ReportControls({ type, usesLocation, usesDates, locations, values }: Props) {
   const router = useRouter()
   const [pending, startTransition] = useTransition()

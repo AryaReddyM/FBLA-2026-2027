@@ -13,16 +13,10 @@
     "test:e2e": "playwright test",
     "format": "prettier --write .",
     "db:push": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --env-file=.env.local scripts/db-push.ts",
-    "db:seed": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --env-file=.env.local scripts/seed.ts",
-    "setup": "npm run db:push && npm run db:seed",
+    "db:init": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --env-file=.env.local scripts/init.ts",
+    "setup": "npm run db:push && npm run db:init",
     "db:types": "supabase gen types typescript --local > src/types/database.ts",
-    "db:types:remote": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --env-file=.env.local scripts/db-types.ts",
-    "dev:school": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/with-env.ts .env.school.local dev -p 3001",
-    "build:school": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/with-env.ts .env.school.local build",
-    "start:school": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/with-env.ts .env.school.local start -p 3001",
-    "school:push": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --env-file=.env.school.local scripts/db-push.ts",
-    "school:init": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --env-file=.env.school.local scripts/school-init.ts",
-    "school:setup": "npm run school:push && npm run school:init"
+    "db:types:remote": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --env-file=.env.local scripts/db-types.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.2",

@@ -87,7 +87,6 @@ async function Licenses() {
     return d !== null && d >= 0 && d <= 60
   })
 
-  // Renewal calendar: the next 12 months, starting this month.
   const firstMonth = startOfMonth(new Date())
   const months = Array.from({ length: 12 }, (_, i) => addMonths(firstMonth, i))
   const byMonth = new Map<string, LicenseRow[]>()

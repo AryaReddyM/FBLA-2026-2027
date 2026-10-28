@@ -1,5 +1,3 @@
-// Human-friendly labels for database enum values.
-
 import type { Enums } from "@/types/database"
 
 export const STATUS_LABELS: Record<Enums<"asset_status">, string> = {

@@ -1,31 +1,22 @@
 // @vitest-environment node
-//
-// Row Level Security tests against the real Supabase database (CLAUDE.md M1).
-// They sign in as each demo role with the public key, exactly like a browser
-// would, and check that the database itself refuses what the role can't do.
-// Skipped automatically when .env.local isn't filled in.
+
+import { existsSync } from "node:fs"
 
 import { createClient, type SupabaseClient } from "@supabase/supabase-js"
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
 
 import type { Database } from "@/types/database"
 
-try {
-  process.loadEnvFile(".env.local")
-} catch {
-  // Variables may come from the environment instead.
-}
+import { createTestAccounts, createTestAsset, deleteTestAccounts, testEnv, type TestAccount } from "../support/test-accounts"
 
-const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-const adminPassword = process.env.DEMO_ADMIN_PASSWORD
-const userPassword = process.env.DEMO_USER_PASSWORD
-const configured = Boolean(url && key && adminPassword && userPassword)
+if (existsSync(".env.local")) process.loadEnvFile(".env.local")
 
-async function signIn(email: string, password: string) {
-  const client = createClient<Database>(url!, key!, { auth: { persistSession: false, autoRefreshToken: false } })
-  const { error } = await client.auth.signInWithPassword({ email, password })
-  if (error) throw new Error(`Sign-in failed for ${email}: ${error.message}`)
+const { url, publicKey, configured } = testEnv()
+
+async function signIn(account: TestAccount) {
+  const client = createClient<Database>(url!, publicKey!, { auth: { persistSession: false, autoRefreshToken: false } })
+  const { error } = await client.auth.signInWithPassword({ email: account.email, password: account.password })
+  if (error) throw new Error(`Sign-in failed for ${account.email}: ${error.message}`)
   return client
 }
 
@@ -36,22 +27,24 @@ describe.skipIf(!configured)("row level security (live database)", () => {
   let viewer: SupabaseClient<Database>
   let anon: SupabaseClient<Database>
   let assetId: string
-  const createdIds: string[] = []
 
   beforeAll(async () => {
-    admin = await signIn("admin@demo.edutrack.test", adminPassword!)
-    manager = await signIn("manager@demo.edutrack.test", userPassword!)
-    staff = await signIn("teacher@demo.edutrack.test", userPassword!)
-    viewer = await signIn("viewer@demo.edutrack.test", userPassword!)
-    anon = createClient<Database>(url!, key!, { auth: { persistSession: false } })
-    const { data } = await viewer.from("assets").select("id").eq("status", "available").eq("kind", "physical").limit(1).single()
-    assetId = data!.id
-  }, 30_000)
+    await deleteTestAccounts()
+    const accounts = await createTestAccounts()
+    const byRole = (role: TestAccount["role"]) => accounts.find((a) => a.role === role)!
+    ;[admin, manager, staff, viewer] = await Promise.all([
+      signIn(byRole("admin")),
+      signIn(byRole("manager")),
+      signIn(byRole("staff")),
+      signIn(byRole("viewer")),
+    ])
+    anon = createClient<Database>(url!, publicKey!, { auth: { persistSession: false } })
+    assetId = (await createTestAsset(byRole("admin").id, "RLS test item")).id
+  }, 60_000)
 
   afterAll(async () => {
-    // Soft-delete anything the test created (assets are never hard-deleted).
-    if (createdIds.length) await admin.from("assets").update({ deleted_at: new Date().toISOString() }).in("id", createdIds)
-  })
+    await deleteTestAccounts()
+  }, 60_000)
 
   it("signed-out visitors can't read anything", async () => {
     const { data } = await anon.from("assets").select("id").limit(1)
@@ -69,7 +62,6 @@ describe.skipIf(!configured)("row level security (live database)", () => {
   it("staff can add items, and edit the ones they added, but not retire or delete them", async () => {
     const { data, error } = await staff.from("assets").insert({ name: "RLS test staff item", kind: "physical" }).select("id").single()
     expect(error).toBeNull()
-    createdIds.push(data!.id)
     const { data: edited } = await staff.from("assets").update({ notes: "edited by its owner" }).eq("id", data!.id).select("id")
     expect(edited).toHaveLength(1)
     const { error: retireError } = await staff.from("assets").update({ status: "retired" }).eq("id", data!.id)
@@ -87,7 +79,6 @@ describe.skipIf(!configured)("row level security (live database)", () => {
     const { data, error } = await manager.from("assets").insert({ name: "RLS test item", kind: "physical" }).select("id, asset_tag").single()
     expect(error).toBeNull()
     expect(data?.asset_tag).toMatch(/^[A-Z0-9]+-\d{4}-\d{6}$/)
-    createdIds.push(data!.id)
   })
 
   it("staff cannot edit items someone else added (the update silently matches no rows)", async () => {
@@ -126,10 +117,5 @@ describe.skipIf(!configured)("row level security (live database)", () => {
   it("only admins can manage categories", async () => {
     const { error } = await manager.from("categories").insert({ name: "RLS test category", kind: "physical" })
     expect(error?.message).toMatch(/row-level security/)
-  })
-
-  it("only the service role can load demo data", async () => {
-    const { error } = await admin.rpc("admin_load_demo_data", { p: {} })
-    expect(error?.message).toMatch(/permission denied/)
   })
 })

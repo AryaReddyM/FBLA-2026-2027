@@ -1,5 +1,3 @@
-// Helpers for building links that keep the current filters in the URL.
-
 export type QueryValue = string | number | null | undefined
 
 /** Returns `path?a=1&b=2`, dropping empty values. */

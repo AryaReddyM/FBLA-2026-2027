@@ -57,7 +57,6 @@ const LIBRARIES: { name: string; url: string; use: string }[] = [
   { name: "Vitest, Playwright, axe-core", url: "https://playwright.dev", use: "Automated and accessibility testing" },
 ]
 
-/** Public page: project purpose, research basis, privacy, credits and third-party code. */
 export default function AboutPage() {
   return (
     <div className="min-h-dvh bg-background">
@@ -176,7 +175,7 @@ export default function AboutPage() {
                   We store only what&apos;s needed to get an item back: a student&apos;s name and school ID number. No
                   birthdates, addresses, grades or photos of students.
                 </p>
-                <p>Activity feeds show &ldquo;Student #10234&rdquo; rather than a name. All demo data is fictional.</p>
+                <p>Activity feeds show &ldquo;Student #10234&rdquo; rather than a name.</p>
                 <p>
                   Every table is protected by database-level security rules, so people only see and change what their
                   role allows, even if they bypass the website.

@@ -22,7 +22,6 @@ export type LicenseRow = {
   expires_at: string | null
 }
 
-/** All digital assets with their license terms and how many seats are in use. */
 export async function getLicenses(): Promise<LicenseRow[]> {
   const supabase = await createClient()
   const [{ data: assets, error }, { data: seats }] = await Promise.all([

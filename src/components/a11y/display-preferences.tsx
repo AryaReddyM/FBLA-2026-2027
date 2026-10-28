@@ -158,7 +158,7 @@ function isTypingTarget(target: EventTarget | null) {
 
 /**
  * The floating "Aa Accessibility" button and its Display preferences panel
- * (CLAUDE.md §9), plus the reading guide, read-aloud controls and keyboard
+ * (WCAG 2.2 AA), plus the reading guide, read-aloud controls and keyboard
  * shortcuts list. Shown on every page, including sign-in.
  */
 export function DisplayPreferences() {

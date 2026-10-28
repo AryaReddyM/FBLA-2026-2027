@@ -1,9 +1,6 @@
 import type { NextConfig } from "next"
 
 const nextConfig: NextConfig = {
-  // The demo and the real school are separate Supabase projects. Their public
-  // keys are baked into the build, so each gets its own build folder.
-  distDir: process.env.NEXT_DIST_DIR || ".next",
   // Cache Components: pages render a static shell instantly and stream the
   // signed-in, per-user parts behind <Suspense> boundaries.
   cacheComponents: true,

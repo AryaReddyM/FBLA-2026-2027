@@ -1,5 +1,3 @@
--- Audit log triggers.
---
 -- Why triggers instead of app code: every write, from any page, script, or the
 -- SQL editor, goes through Postgres. Logging here means nothing can skip the
 -- history, and a bug in one Server Action can't silently lose it.
@@ -52,7 +50,7 @@ declare
   v_asset record;
   v_label text;
 begin
-  -- Bulk demo-data loads switch auditing off for their own transaction only.
+  -- Start fresh switches auditing off for its own transaction only.
   if coalesce(current_setting('edutrack.skip_audit', true), '') = 'on' then
     return null;
   end if;
@@ -60,7 +58,7 @@ begin
   if tg_op = 'UPDATE' then
     v_changes := public.jsonb_diff(v_old, v_new);
     if v_changes is null then
-      return null; -- nothing meaningful changed
+      return null;
     end if;
   elsif tg_op = 'INSERT' then
     v_changes := jsonb_build_object('after', v_new - 'search_vector');
@@ -151,6 +149,8 @@ begin
       v_summary := case when new.is_active then 'reactivated ' else 'deactivated ' end || new.full_name;
     elsif tg_op = 'INSERT' then
       v_summary := 'created an account for ' || new.full_name;
+    elsif tg_op = 'DELETE' then
+      v_summary := 'removed the account of ' || (v_row ->> 'full_name');
     else
       v_summary := 'updated the profile of ' || (v_row ->> 'full_name');
     end if;

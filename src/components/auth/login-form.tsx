@@ -13,16 +13,14 @@ import { FieldGroup } from "@/components/ui/field"
 import { Spinner } from "@/components/ui/spinner"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { sendMagicLink, signInWithPassword } from "@/lib/actions/auth"
-import { ROLE_LABELS, type Role } from "@/lib/permissions"
 import { magicLinkSchema, passwordLoginSchema } from "@/lib/validation/auth"
 
 type Props = {
   next?: string
   initialError: string | null
-  demoAccounts: { email: string; role: Role }[]
 }
 
-export function LoginForm({ next, initialError, demoAccounts }: Props) {
+export function LoginForm({ next, initialError }: Props) {
   const [error, setError] = useState<string | null>(initialError)
   const [linkSentTo, setLinkSentTo] = useState<string | null>(null)
   const [pending, startTransition] = useTransition()
@@ -140,30 +138,6 @@ export function LoginForm({ next, initialError, demoAccounts }: Props) {
           Create an account
         </Link>
       </p>
-
-      {demoAccounts.length > 0 ? (
-        <div className="rounded-lg border border-dashed bg-muted/40 p-3 text-sm">
-          <p className="font-medium">Demo accounts</p>
-          <p className="mb-2 text-xs text-muted-foreground">Passwords are set in .env.local by the seed script.</p>
-          <ul className="grid gap-1">
-            {demoAccounts.map((account) => (
-              <li key={account.email}>
-                <button
-                  type="button"
-                  className="flex w-full items-center justify-between gap-2 rounded px-1.5 py-1 text-left hover:bg-muted"
-                  onClick={() => {
-                    passwordForm.setValue("email", account.email)
-                    passwordForm.setFocus("password")
-                  }}
-                >
-                  <span className="truncate font-mono text-xs">{account.email}</span>
-                  <span className="shrink-0 text-xs text-muted-foreground">{ROLE_LABELS[account.role]}</span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
     </div>
   )
 }

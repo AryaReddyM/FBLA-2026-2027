@@ -141,9 +141,7 @@ async function scopeLabel(ctx: Context) {
   return data?.name ?? "Selected location"
 }
 
-// ---------------------------------------------------------------------------
 // 1. Annual Inventory: grouped by location, then category.
-// ---------------------------------------------------------------------------
 async function annualInventory(ctx: Context): Promise<Body> {
   const assets = (await loadAssets(ctx)).filter((a) => a.status !== "retired")
   const today = new Date()
@@ -266,14 +264,12 @@ async function yearCirculation(ctx: Context) {
   return { since, out, back, stillOut, overdue }
 }
 
-// ---------------------------------------------------------------------------
 // 2. Checkout Activity: loans in a date range, overdue, lost.
-// ---------------------------------------------------------------------------
 async function checkoutActivity(ctx: Context): Promise<Body> {
   const { supabase, params, user } = ctx
   const from = params.from ?? schoolYearStart(ctx.institution.fiscal_year_start_month)
   const to = params.to ?? format(new Date(), "yyyy-MM-dd")
-  // Staff can only report on their own checkouts (CLAUDE.md §7).
+  // Staff can only report on their own checkouts.
   const ownOnly = user.role === "staff"
 
   const loans = await fetchAll((start, end) => {
@@ -344,9 +340,7 @@ async function checkoutActivity(ctx: Context): Promise<Body> {
   }
 }
 
-// ---------------------------------------------------------------------------
 // 3. Valuation & Depreciation: by category.
-// ---------------------------------------------------------------------------
 async function valuation(ctx: Context): Promise<Body> {
   const assets = (await loadAssets(ctx, { physicalOnly: true })).filter((a) => a.status !== "retired")
   const today = new Date()
@@ -428,9 +422,7 @@ async function valuation(ctx: Context): Promise<Body> {
   }
 }
 
-// ---------------------------------------------------------------------------
 // 4. Digital License Summary
-// ---------------------------------------------------------------------------
 async function licenseSummary(ctx: Context): Promise<Body> {
   const { supabase } = ctx
   const [{ data: assets, error }, seats] = await Promise.all([
@@ -508,9 +500,7 @@ async function licenseSummary(ctx: Context): Promise<Body> {
   }
 }
 
-// ---------------------------------------------------------------------------
 // 5. Audit Trail (admins and managers; RLS also enforces this)
-// ---------------------------------------------------------------------------
 async function auditTrail(ctx: Context): Promise<Body> {
   const { supabase, params } = ctx
   const from = params.from ?? format(addDays(new Date(), -30), "yyyy-MM-dd")

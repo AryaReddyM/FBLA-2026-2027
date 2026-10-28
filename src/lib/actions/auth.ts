@@ -76,6 +76,11 @@ export async function signUp(input: unknown): Promise<ActionResult<{ needsConfir
   if (error) {
     if (error.code === "user_already_exists") return fail("An account with that email already exists. Try signing in.")
     if (error.code === "weak_password") return fail("Choose a stronger password.")
+    if (error.code === "over_email_send_rate_limit" || error.status === 429) {
+      return fail(
+        "Too many sign-up emails were sent in the last hour, so we couldn't send your confirmation email. Try again later, or ask an admin to add your account in Admin → Users & roles.",
+      )
+    }
     return fail(error.message)
   }
   // With email confirmation turned off in Supabase, the user is signed in immediately.

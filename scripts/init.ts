@@ -1,18 +1,18 @@
-// Prepares the REAL school project (not the demo):
+// Prepares a Supabase project for a school:
 //
-//   npm run school:setup   (pushes the database schema, then runs this)
+//   npm run setup   (pushes the database schema, then runs this)
 //
-// Creates the school admin account, sets the school's name, and adds a few
-// starter categories. It never adds or deletes inventory, so it's safe to
-// run again (for example, to reset the admin password).
+// Creates or updates the first admin account, sets the school's name, and adds
+// starter categories. It never adds or deletes items, so it's safe to run again
+// (for example, to reset the admin password).
 
 import { createClient } from "@supabase/supabase-js"
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-const email = process.env.SCHOOL_ADMIN_EMAIL?.trim().toLowerCase()
-const password = process.env.SCHOOL_ADMIN_PASSWORD
-const fullName = process.env.SCHOOL_ADMIN_NAME?.trim() || email?.split("@")[0] || "School admin"
+const email = process.env.ADMIN_EMAIL?.trim().toLowerCase()
+const password = process.env.ADMIN_PASSWORD
+const fullName = process.env.ADMIN_NAME?.trim() || email?.split("@")[0] || "School admin"
 const schoolName = process.env.SCHOOL_NAME?.trim()
 
 function fail(message: string): never {
@@ -20,10 +20,9 @@ function fail(message: string): never {
   process.exit(1)
 }
 
-if (process.env.DEMO_MODE === "true") fail("DEMO_MODE is true. This script is for the real school project (.env.school.local).")
-if (!url || !serviceKey) fail("Set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in .env.school.local first.")
-if (!email || !email.includes("@")) fail("Set SCHOOL_ADMIN_EMAIL in .env.school.local.")
-if (!password || password.length < 8) fail("Set SCHOOL_ADMIN_PASSWORD (8+ characters) in .env.school.local.")
+if (!url || !serviceKey) fail("Set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in .env.local first.")
+if (!email || !email.includes("@")) fail("Set ADMIN_EMAIL in .env.local.")
+if (!password || password.length < 8) fail("Set ADMIN_PASSWORD (8+ characters) in .env.local.")
 
 const supabase = createClient(url, serviceKey, { auth: { autoRefreshToken: false, persistSession: false } })
 
@@ -57,7 +56,7 @@ async function findUserId(target: string): Promise<string | null> {
 }
 
 async function main() {
-  console.log(`Setting up the school project at ${url}\n`)
+  console.log(`Setting up EduTrack at ${url}\n`)
 
   let id = await findUserId(email!)
   if (id) {
@@ -97,7 +96,7 @@ async function main() {
 
   const { count: items } = await supabase.from("assets").select("id", { count: "exact", head: true })
   console.log(`\n✔ Ready. The inventory has ${items ?? 0} items.`)
-  console.log(`  Run "npm run dev:school" and sign in as ${email}.`)
+  console.log(`  Run "npm run dev" and sign in as ${email}.`)
   console.log("  Next: add your rooms in Settings → Locations, then register items or import a spreadsheet.")
 }
 

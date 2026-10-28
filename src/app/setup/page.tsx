@@ -12,11 +12,11 @@ const STEPS = [
   },
   {
     title: "Fill in .env.local",
-    body: "Copy the Project URL, the publishable key, the secret key and the session pooler connection string into .env.local at the project root. Pick passwords for the demo accounts too.",
+    body: "Copy the Project URL, the publishable key, the secret key and the session pooler connection string into .env.local at the project root, plus the email and password for the first admin account.",
   },
   {
     title: "Run the setup script",
-    body: "In a terminal: npm run setup. It creates the tables, security rules and demo data.",
+    body: "In a terminal: npm run setup. It creates the tables, security rules, the admin account and starter categories.",
   },
   {
     title: "Restart the dev server",

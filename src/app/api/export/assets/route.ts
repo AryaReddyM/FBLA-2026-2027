@@ -4,7 +4,6 @@ import { toCsv } from "@/lib/csv"
 import { CONDITION_LABELS, KIND_LABELS, STATUS_LABELS } from "@/lib/labels"
 import { createClient } from "@/lib/supabase/server"
 
-/** CSV export of selected catalog items (the catalog's "Export CSV" bulk action). */
 export async function GET(request: NextRequest) {
   const supabase = await createClient()
   const { data: claims } = await supabase.auth.getClaims()

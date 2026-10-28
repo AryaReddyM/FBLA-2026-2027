@@ -21,24 +21,3 @@ export const ALLOWED_PHOTO_TYPES = ["image/jpeg", "image/png", "image/webp"] as 
 export const RENEWAL_ALERT_DAYS = [60, 30] as const
 
 export const MAX_IMPORT_ROWS = 2000
-
-export const DEMO_EMAIL_DOMAIN = "demo.edutrack.test"
-export const DEMO_ACCOUNTS = [
-  { email: `admin@${DEMO_EMAIL_DOMAIN}`, role: "admin", name: "Alex Rivera" },
-  { email: `manager@${DEMO_EMAIL_DOMAIN}`, role: "manager", name: "Jordan Patel" },
-  { email: `teacher@${DEMO_EMAIL_DOMAIN}`, role: "staff", name: "Morgan Lee" },
-  { email: `viewer@${DEMO_EMAIL_DOMAIN}`, role: "viewer", name: "Casey Brooks" },
-] as const
-
-/**
- * True only for the demo project (DEMO_MODE=true in its env file). Demo-only
- * features (the "Reset demo data" button, demo logins on the sign-in page,
- * the seed script) are switched off everywhere else, so a real school's
- * inventory can never be wiped by accident.
- */
-export function isDemoMode() {
-  return process.env.DEMO_MODE === "true"
-}
-
-/** Kept as a separate name so call sites read clearly. */
-export const isDemoResetEnabled = isDemoMode

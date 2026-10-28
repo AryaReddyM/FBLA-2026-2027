@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button"
 import { checkIn } from "@/lib/actions/circulation"
 import { formatDate } from "@/lib/format"
 
-/** Who currently holds a seat of a digital license, with a one-click release. */
 export function SeatList({
   seats,
   canRelease,

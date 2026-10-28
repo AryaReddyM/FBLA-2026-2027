@@ -20,9 +20,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Spinner } from "@/components/ui/spinner"
-import { startFresh } from "@/lib/actions/demo"
+import { startFresh } from "@/lib/actions/start-fresh"
 
-/** Admin-only "Start fresh": empties the catalog after typing DELETE. */
 export function StartFreshButton({ itemCount }: { itemCount: number }) {
   const router = useRouter()
   const [confirmation, setConfirmation] = useState("")

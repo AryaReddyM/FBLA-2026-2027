@@ -12,7 +12,6 @@ export async function GET(request: NextRequest, ctx: RouteContext<"/api/reports/
   const { data: run } = await supabase.from("report_runs").select("file_path").eq("id", id).maybeSingle()
   if (!run?.file_path) return NextResponse.json({ error: "That report file isn't available." }, { status: 404 })
 
-  // A short-lived link straight to the stored file.
   const fileName = run.file_path.split("/").pop()?.replace(/^\d+-/, "") ?? "report"
   const { data, error } = await supabase.storage
     .from("reports")

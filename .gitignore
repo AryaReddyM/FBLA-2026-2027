@@ -15,7 +15,6 @@
 
 # next.js
 /.next/
-/.next-school/
 /out/
 
 # production
@@ -50,3 +49,9 @@ next-env.d.ts
 # supabase local
 /supabase/.temp/
 /supabase/.branches/
+
+# local notes
+CLAUDE.md
+AGENTS.md
+PROGRESS.md
+.claude/

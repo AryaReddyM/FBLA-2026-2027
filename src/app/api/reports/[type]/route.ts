@@ -15,9 +15,9 @@ import { renderPdf } from "@/lib/reports/render-pdf"
 import { renderXlsx } from "@/lib/reports/render-xlsx"
 import { createClient } from "@/lib/supabase/server"
 
-// Note: CLAUDE.md asks for `export const runtime = "nodejs"`. With Cache
-// Components enabled Next.js rejects that export, and route handlers already
-// run on Node.js by default, which @react-pdf/renderer and exceljs need.
+// No `export const runtime = "nodejs"`: with Cache Components enabled Next.js
+// rejects that export, and route handlers already run on Node.js by default,
+// which @react-pdf/renderer and exceljs need.
 
 const CONTENT_TYPES: Record<ReportFormat, string> = {
   pdf: "application/pdf",

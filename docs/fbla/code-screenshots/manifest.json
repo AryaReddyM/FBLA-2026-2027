@@ -1,0 +1,92 @@
+[
+  {
+    "id": "01-checkout-row-locking",
+    "title": "Two people can't check out the same Chromebook",
+    "file": "supabase/migrations/20261025000600_rpc_functions.sql",
+    "lines": "lines 40–65"
+  },
+  {
+    "id": "02-search-ranking",
+    "title": "Search ranking: exact tag, then full-text, then typo-tolerant",
+    "file": "supabase/migrations/20261025000600_rpc_functions.sql",
+    "lines": "lines 215–239"
+  },
+  {
+    "id": "03-duplicate-detection",
+    "title": "Duplicate detection before registering an item",
+    "file": "supabase/migrations/20261025000600_rpc_functions.sql",
+    "lines": "lines 305–347"
+  },
+  {
+    "id": "04-row-level-security",
+    "title": "Row Level Security: who may add and edit items",
+    "file": "supabase/migrations/20261028000200_staff_can_add_items.sql",
+    "lines": "lines 9–48"
+  },
+  {
+    "id": "05-loans-and-audit-locked-down",
+    "title": "Loans only through checked functions; history can't be edited",
+    "file": "supabase/migrations/20261025000500_rls_policies.sql",
+    "lines": "lines 110–122"
+  },
+  {
+    "id": "06-audit-trigger",
+    "title": "Audit trail written by the database, in plain language",
+    "file": "supabase/migrations/20261025000400_audit_log.sql",
+    "lines": "lines 1–3, lines 115–132"
+  },
+  {
+    "id": "07-depreciation-math",
+    "title": "Straight-line depreciation for the valuation report",
+    "file": "src/lib/depreciation.ts",
+    "lines": "lines 1–7, lines 44–66"
+  },
+  {
+    "id": "08-shared-validation",
+    "title": "One Zod schema checks the form in the browser AND on the server",
+    "file": "src/lib/validation/common.ts",
+    "lines": "lines 3–6, lines 32–44"
+  },
+  {
+    "id": "09-server-action",
+    "title": "Every Server Action: who are you, is this allowed, is the input valid?",
+    "file": "src/lib/actions/assets.ts",
+    "lines": "lines 80–107"
+  },
+  {
+    "id": "10-report-generation-timing",
+    "title": "Reports: build, render PDF/Excel/CSV, archive, and time it",
+    "file": "src/app/api/reports/[type]/route.ts",
+    "lines": "lines 52–84"
+  },
+  {
+    "id": "11-status-not-color-alone",
+    "title": "Accessibility: status is never shown by color alone",
+    "file": "src/components/inventory/status-badge.tsx",
+    "lines": "lines 17–39"
+  },
+  {
+    "id": "12-no-flash-preferences",
+    "title": "Display preferences applied before the page paints",
+    "file": "src/components/a11y/preferences-script.ts",
+    "lines": "lines 38–50"
+  },
+  {
+    "id": "13-accessible-css",
+    "title": "WCAG 1.4.12 text spacing and a stronger focus outline",
+    "file": "src/app/globals.css",
+    "lines": "lines 290–319"
+  },
+  {
+    "id": "14-rls-tests",
+    "title": "Tests sign in as each role and prove the database refuses",
+    "file": "tests/integration/rls.test.ts",
+    "lines": "lines 62–73, lines 94–97"
+  },
+  {
+    "id": "15-accessibility-tests",
+    "title": "Every page is scanned for WCAG problems in automated tests",
+    "file": "tests/e2e/helpers.ts",
+    "lines": "lines 8–18"
+  }
+]

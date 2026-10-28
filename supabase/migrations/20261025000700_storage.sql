@@ -1,5 +1,3 @@
--- Storage buckets for asset photos and generated report files.
-
 -- Photos are public-read (they are pictures of projectors, not people) so
 -- they can be shown with a plain URL. Size and type limits are enforced by
 -- Storage itself as well as by the upload Server Action.

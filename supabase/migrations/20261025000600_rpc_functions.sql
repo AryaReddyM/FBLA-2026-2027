@@ -2,9 +2,7 @@
 -- Anything that changes several rows at once lives here so it happens in one
 -- transaction: it either fully succeeds or fully rolls back.
 
--- ---------------------------------------------------------------------------
 -- check_out_asset: lend a physical item or assign a digital seat.
--- ---------------------------------------------------------------------------
 create or replace function public.check_out_asset(
   p_asset_id uuid,
   p_borrower_type public.borrower_type,
@@ -96,9 +94,7 @@ begin
 end;
 $$;
 
--- ---------------------------------------------------------------------------
 -- check_in_asset: close a loan / release a seat.
--- ---------------------------------------------------------------------------
 create or replace function public.check_in_asset(
   p_checkout_id uuid,
   p_condition_in public.asset_condition default null,
@@ -151,10 +147,8 @@ begin
 end;
 $$;
 
--- ---------------------------------------------------------------------------
 -- search_assets: catalog + global search with filters, sorting and paging.
 -- SECURITY INVOKER (the default), so the caller's RLS policies still apply.
--- ---------------------------------------------------------------------------
 create or replace function public.search_assets(
   q text default '',
   filters jsonb default '{}'::jsonb,
@@ -307,9 +301,7 @@ begin
 end;
 $$;
 
--- ---------------------------------------------------------------------------
 -- find_possible_duplicates: warn before registering the same thing twice.
--- ---------------------------------------------------------------------------
 create or replace function public.find_possible_duplicates(
   p_serial text default null,
   p_name text default null,
@@ -354,9 +346,7 @@ as $$
   limit 5
 $$;
 
--- ---------------------------------------------------------------------------
 -- dashboard_stats: everything the dashboard's cards and charts need, in one trip.
--- ---------------------------------------------------------------------------
 create or replace function public.dashboard_stats()
 returns jsonb
 language sql
@@ -428,11 +418,9 @@ as $$
   )
 $$;
 
--- ---------------------------------------------------------------------------
 -- import_assets: all-or-nothing CSV import. The app validates and resolves
 -- category/location names to ids first; any row that still fails here rolls
 -- back the whole import, so nothing is ever half-imported.
--- ---------------------------------------------------------------------------
 create or replace function public.import_assets(p_rows jsonb)
 returns integer
 language plpgsql
@@ -497,112 +485,6 @@ begin
 end;
 $$;
 
--- ---------------------------------------------------------------------------
--- admin_load_demo_data: wipe inventory data and load a fresh demo data set.
--- Only the service role (seed script / admin reset button on the server) may
--- call this; it is revoked from every signed-in user below.
--- ---------------------------------------------------------------------------
-create or replace function public.admin_load_demo_data(p jsonb)
-returns jsonb
-language plpgsql
-security definer
-set search_path = public
-as $$
-begin
-  perform set_config('edutrack.skip_audit', 'on', true);
-
-  delete from public.audit_log where true;
-  delete from public.report_runs where true;
-  delete from public.metric_events where true;
-  delete from public.checkouts where true;
-  delete from public.digital_licenses where true;
-  delete from public.assets where true;
-  delete from public.locations where true;
-  delete from public.categories where true;
-
-  update public.institution_settings
-     set name = coalesce(p -> 'settings' ->> 'name', name),
-         asset_tag_prefix = coalesce(p -> 'settings' ->> 'asset_tag_prefix', asset_tag_prefix),
-         default_loan_days = coalesce((p -> 'settings' ->> 'default_loan_days')::integer, default_loan_days),
-         fiscal_year_start_month = coalesce((p -> 'settings' ->> 'fiscal_year_start_month')::smallint, fiscal_year_start_month)
-   where true;
-
-  insert into public.categories (id, name, kind, parent_id, useful_life_years, custom_field_schema)
-  select id, name, kind, parent_id, useful_life_years, coalesce(custom_field_schema, '[]'::jsonb)
-    from jsonb_populate_recordset(null::public.categories, p -> 'categories');
-
-  insert into public.locations (id, name, building, room, type, manager_id)
-  select id, name, building, room, coalesce(type, 'classroom'), manager_id
-    from jsonb_populate_recordset(null::public.locations, p -> 'locations');
-
-  insert into public.assets (
-    id, asset_tag, name, description, kind, category_id, location_id, status, condition,
-    serial_number, manufacturer, model, acquisition_date, acquisition_cost, funding_source,
-    vendor, custom_fields, notes, created_by, created_at
-  )
-  select id, asset_tag, name, description, kind, category_id, location_id, coalesce(status, 'available'), condition,
-         serial_number, manufacturer, model, acquisition_date, acquisition_cost, funding_source,
-         vendor, coalesce(custom_fields, '{}'::jsonb), notes, created_by, coalesce(created_at, now())
-    from jsonb_populate_recordset(null::public.assets, p -> 'assets');
-
-  insert into public.digital_licenses (
-    asset_id, seats_total, license_type, billing_cycle, cost_per_period, renewal_date,
-    expires_at, platform_url, admin_contact, contract_number, license_key_hint
-  )
-  select asset_id, seats_total, coalesce(license_type, 'per_seat'), coalesce(billing_cycle, 'annual'), cost_per_period,
-         renewal_date, expires_at, platform_url, admin_contact, contract_number, license_key_hint
-    from jsonb_populate_recordset(null::public.digital_licenses, p -> 'licenses');
-
-  insert into public.checkouts (
-    id, asset_id, asset_kind, borrower_type, borrower_name, borrower_ref, checked_out_by,
-    checked_out_at, due_at, returned_at, returned_to, condition_out, condition_in, notes, created_at
-  )
-  select c.id, c.asset_id, a.kind, c.borrower_type, c.borrower_name, c.borrower_ref, c.checked_out_by,
-         c.checked_out_at, c.due_at, c.returned_at, c.returned_to, c.condition_out, c.condition_in, c.notes, c.checked_out_at
-    from jsonb_populate_recordset(null::public.checkouts, p -> 'checkouts') c
-    join public.assets a on a.id = c.asset_id;
-
-  -- Make asset status agree with open loans, whatever the generator produced.
-  update public.assets a
-     set status = 'checked_out'
-   where a.kind = 'physical'
-     and a.status = 'available'
-     and exists (select 1 from public.checkouts c where c.asset_id = a.id and c.returned_at is null);
-
-  -- Recreate a believable history so the dashboard's activity feed and the
-  -- item timelines aren't empty on day one.
-  insert into public.audit_log (actor_id, action, entity, entity_id, asset_id, summary, created_at)
-  select a.created_by, 'create', 'assets', a.id, a.id,
-         'registered ' || a.name || ' (' || a.asset_tag || ')', a.created_at
-    from public.assets a
-  union all
-  select c.checked_out_by, 'check_out', 'checkouts', c.id, c.asset_id,
-         case when c.asset_kind = 'digital' then 'assigned a seat of ' else 'checked out ' end
-           || a.name || ' ' || a.asset_tag || ' to ' || public.borrower_label(c.borrower_type, c.borrower_name, c.borrower_ref),
-         c.checked_out_at
-    from public.checkouts c join public.assets a on a.id = c.asset_id
-  union all
-  select c.returned_to, 'check_in', 'checkouts', c.id, c.asset_id,
-         case when c.asset_kind = 'digital' then 'released a seat of ' else 'checked in ' end
-           || a.name || ' ' || a.asset_tag || ' from ' || public.borrower_label(c.borrower_type, c.borrower_name, c.borrower_ref)
-           || coalesce(' (condition: ' || c.condition_in::text || ')', ''),
-         c.returned_at
-    from public.checkouts c join public.assets a on a.id = c.asset_id
-   where c.returned_at is not null;
-
-  return jsonb_build_object(
-    'categories', (select count(*) from public.categories),
-    'locations', (select count(*) from public.locations),
-    'assets', (select count(*) from public.assets),
-    'checkouts', (select count(*) from public.checkouts)
-  );
-end;
-$$;
-
--- ---------------------------------------------------------------------------
--- Function privileges. Logged-out visitors can call nothing; the demo loader
--- is for the service role only.
--- ---------------------------------------------------------------------------
+-- Function privileges. Logged-out visitors can call nothing.
 revoke execute on all functions in schema public from public, anon;
 grant execute on all functions in schema public to authenticated, service_role;
-revoke execute on function public.admin_load_demo_data(jsonb) from authenticated;

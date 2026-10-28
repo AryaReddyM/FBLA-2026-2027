@@ -38,7 +38,6 @@ async function EditForm({ params }: { params: PageProps<"/inventory/[id]/edit">[
   const { id } = await params
   const [asset, categories, locations] = await Promise.all([getAsset(id), getCategories(), getLocations()])
   if (!asset) notFound()
-  // Staff can edit only items they added.
   if (!canEditAsset(user.role, user.id, asset.created_by)) redirect(`/inventory/${asset.id}`)
 
   const license = asset.license

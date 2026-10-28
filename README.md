@@ -13,7 +13,7 @@ Built for the FBLA Website Coding & Development event (2026–2027). The design 
 - **Circulation desk**: check out / check in by typing, USB scanner or tablet camera. Overdue items flagged with icon + text. Concurrency-safe in the database.
 - **Digital licenses**: seat usage, cost per used seat, 12-month renewal calendar.
 - **Reports**: Annual Inventory, Checkout Activity, Valuation & Depreciation, License Summary, Audit Trail. Preview on screen, export **PDF / Excel / CSV**, every export saved to history.
-- **Settings**: institution, categories (custom field builder), locations, users & roles, CSV import with validation preview, demo data reset.
+- **Settings**: institution, categories (custom field builder), locations, users & roles, CSV import with validation preview, Start fresh.
 - **Accessibility**: WCAG 2.2 AA target, text size 100–150%, high-contrast theme, dark mode, skip link, full keyboard support, axe checks in E2E tests.
 - **Security**: Supabase Auth, Row Level Security on every table, append-only audit log written by database triggers.
 
@@ -31,61 +31,27 @@ You need Node.js 22+ and a free [Supabase](https://supabase.com) account.
    - `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (`sb_publishable_…`): the **Connect** button, or Project Settings → API Keys. (Older projects can use the `anon` key under `NEXT_PUBLIC_SUPABASE_ANON_KEY`.)
    - `SUPABASE_SERVICE_ROLE_KEY`: Project Settings → API Keys → **Secret keys** (`sb_secret_…`), or the legacy `service_role` key. **Server only.**
    - `SUPABASE_DB_URL`: **Connect** → *Session pooler* connection string, with your database password filled in.
-   - `DEMO_ADMIN_PASSWORD`, `DEMO_USER_PASSWORD`: passwords for the demo accounts (8+ characters).
-4. **Create the database and demo data**: `npm run setup`
-   (runs `db:push`, which applies `supabase/migrations`, then `db:seed`, which creates the demo accounts and ~300 fictional items).
+   - `ADMIN_EMAIL`, `ADMIN_PASSWORD` (8+ characters), `ADMIN_NAME`: the first admin account. `SCHOOL_NAME`: your school's name (optional; admins can change it later in Admin → Institution).
+4. **Create the database**: `npm run setup`
+   (runs `db:push`, which applies `supabase/migrations`, then `db:init`, which creates the admin account and starter categories. It never adds or deletes items, so it's safe to run again).
 5. **Auth URLs** (Supabase → Authentication → URL Configuration): set *Site URL* to your deployed URL (or `http://localhost:3000`) and add `http://localhost:3000/**` and `https://YOUR-APP.vercel.app/**` to *Redirect URLs*. This makes email links (magic link, password reset) come back to the app.
 6. **Run it**: `npm run dev` and open http://localhost:3000.
-
-### Demo accounts
-
-| Role | Email | Password |
-|---|---|---|
-| Admin | `admin@demo.edutrack.test` | `DEMO_ADMIN_PASSWORD` |
-| Manager | `manager@demo.edutrack.test` | `DEMO_USER_PASSWORD` |
-| Staff (teacher) | `teacher@demo.edutrack.test` | `DEMO_USER_PASSWORD` |
-| Viewer | `viewer@demo.edutrack.test` | `DEMO_USER_PASSWORD` |
 
 ### Adding real people
 
 - **Recommended:** an admin adds them in **Settings → Users & roles** with a starting password. They can sign in immediately on any device.
-- **Self sign-up** (`/signup`) also works; after the first three accounts, it starts people as Staff. Supabase's built-in email service only delivers to your project's team members and is rate-limited, so either set up custom SMTP (Authentication → Emails) or turn off *Confirm email* (Authentication → Sign In / Providers → Email) for the demo.
+- **Self sign-up** (`/signup`) also works; after the first three accounts, it starts people as Staff. Supabase's built-in email service only delivers to your project's team members and is rate-limited, so either set up custom SMTP (Authentication → Emails) or turn off *Confirm email* (Authentication → Sign In / Providers → Email). Otherwise sign-ups fail with "email rate limit exceeded" after a few emails per hour.
 - The first **three** accounts created in a fresh project automatically become admins, so a school's founding team can all manage it. Everyone after that starts as Staff until an admin changes their role.
-
-## Two projects: FBLA demo and your real school
-
-EduTrack runs against two separate Supabase projects, so the fictional demo
-data and a real school's inventory never mix:
-
-| | Demo (FBLA judging) | Real school |
-|---|---|---|
-| Settings file | `.env.local` | `.env.school.local` |
-| Run it | `npm run dev` → http://localhost:3000 | `npm run dev:school` → http://localhost:3001 |
-| Set up the database | `npm run setup` (schema + fictional data) | `npm run school:setup` (schema + your admin account + starter categories, **no items**) |
-| Demo features | On (`DEMO_MODE=true`): "Reset demo data", demo logins on the sign-in page, `npm run db:seed` | Off: those features are hidden and the seed script refuses to run |
-
-The demo shows a **Demo data** label in the top bar so it's always clear which one you're in.
-
-To set up the real school project:
-
-1. Create a **second** Supabase project (a free account allows two).
-2. Fill in `.env.school.local` the same way as `.env.local` (URL, publishable key, secret key, session pooler string), plus `SCHOOL_ADMIN_PASSWORD` and `SCHOOL_NAME`.
-3. `npm run school:setup`
-4. In that project's Authentication → URL Configuration, add `http://localhost:3001/**` to Redirect URLs.
-5. `npm run dev:school` and sign in with `SCHOOL_ADMIN_EMAIL`.
-
-For production builds of the school version: `npm run build:school && npm run start:school` (built into `.next-school`).
 
 ## Deploy (Vercel)
 
 1. Push the repo to GitHub and import it in Vercel.
-2. Add the environment variables (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, and `NEXT_PUBLIC_SITE_URL` for QR labels). Add `DEMO_MODE=true` **only** on the demo deployment.
-   To host both, create two Vercel projects from the same repo, one with the demo project's keys and one with the school's.
+2. Add the environment variables (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, and `NEXT_PUBLIC_SITE_URL` for QR labels).
 3. Add the Vercel URL to Supabase's Auth redirect URLs (step 5 above).
 
 Camera scanning needs HTTPS, so phones and tablets should use the deployed site (on a laptop, `localhost` and USB barcode scanners work too).
 
-## Offline demo (local Supabase)
+## Offline (local Supabase)
 
 For a venue with bad Wi-Fi, run everything locally. This needs [Docker Desktop](https://www.docker.com/products/docker-desktop/) (with WSL 2 on Windows):
 
@@ -93,7 +59,7 @@ For a venue with bad Wi-Fi, run everything locally. This needs [Docker Desktop](
 npx supabase start          # prints a local URL, anon key and service_role key
 # put those into .env.local (NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321, ...)
 npx supabase db reset       # applies migrations
-npm run db:seed             # demo accounts + data
+npm run db:init             # admin account + starter categories
 npm run build && npm start
 ```
 
@@ -104,11 +70,11 @@ npm run build && npm start
 | `npm run dev` | Development server |
 | `npm run build` / `npm start` | Production build / server |
 | `npm run lint` / `npm run typecheck` | ESLint / TypeScript |
-| `npm run test` | Unit tests + live Row Level Security tests (Vitest; the RLS tests skip if `.env.local` is empty) |
-| `npm run test:e2e` | End-to-end + accessibility tests (Playwright + axe). Needs a seeded database; first run `npx playwright install chromium`. It creates test records, so run `npm run db:seed` afterwards to restore the demo |
-| `npm run setup` | `db:push` + `db:seed` |
+| `npm run test` | Unit tests + live Row Level Security tests (Vitest; the RLS tests create temporary accounts and skip if `.env.local` is empty) |
+| `npm run test:e2e` | End-to-end + accessibility tests (Playwright + axe). First run `npx playwright install chromium`. Creates temporary test accounts and deletes them, with everything they added, when it finishes |
+| `npm run setup` | `db:push` + `db:init` |
 | `npm run db:push` | Apply migrations to the cloud database |
-| `npm run db:seed` | Create demo accounts and reload demo data |
+| `npm run db:init` | Create or update the first admin account and add starter categories |
 | `npm run db:types:remote` | Regenerate `src/types/database.ts` from the cloud database |
 | `npm run db:types` | Same, from the local Docker stack |
 
@@ -125,6 +91,6 @@ src/lib/queries/       read helpers for Server Components
 src/lib/validation/    Zod schemas shared by forms and the server
 src/lib/reports/       report builder + PDF / Excel / CSV renderers
 supabase/migrations/   tables, RLS policies, triggers, RPC functions, storage
-scripts/               setup and seed scripts
+scripts/               database setup scripts
 tests/                 unit/ (Vitest), integration/ (live RLS), e2e/ (Playwright + axe)
 ```

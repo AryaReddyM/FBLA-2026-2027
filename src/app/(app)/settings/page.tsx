@@ -3,12 +3,10 @@ import { Suspense } from "react"
 
 import { PageContainer, PageHeader } from "@/components/layout/page-header"
 import { InstitutionForm } from "@/components/settings/institution-form"
-import { ResetDemoButton } from "@/components/settings/reset-demo-button"
 import { StartFreshButton } from "@/components/settings/start-fresh-button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { requirePermission } from "@/lib/auth"
-import { isDemoResetEnabled } from "@/lib/config"
 import { getInstitution } from "@/lib/queries/settings"
 import { createClient } from "@/lib/supabase/server"
 
@@ -54,27 +52,11 @@ async function Settings() {
         </CardContent>
       </Card>
 
-      {isDemoResetEnabled() ? (
-        <Card className="border-destructive/40">
-          <CardHeader>
-            <CardTitle>Demo data</CardTitle>
-            <CardDescription>
-              Restore the fictional demo school before a presentation. Only available in the demo project
-              (DEMO_MODE=true).
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ResetDemoButton />
-          </CardContent>
-        </Card>
-      ) : null}
-
       <Card className="border-destructive/40">
         <CardHeader>
           <CardTitle>Start fresh</CardTitle>
           <CardDescription>
-            Delete every item, loan, saved report and activity entry to begin with an empty catalog (for example, after
-            trying EduTrack with practice data). Accounts, locations and categories are kept.
+            Delete every item, loan, saved report and activity entry to begin with an empty catalog. Accounts, locations and categories are kept.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-wrap items-center gap-3">

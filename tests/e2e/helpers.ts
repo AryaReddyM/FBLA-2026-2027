@@ -1,18 +1,11 @@
 import AxeBuilder from "@axe-core/playwright"
 import { expect, type Page } from "@playwright/test"
 
-export const ACCOUNTS = [
-  { role: "admin", email: "admin@demo.edutrack.test", password: process.env.DEMO_ADMIN_PASSWORD },
-  { role: "manager", email: "manager@demo.edutrack.test", password: process.env.DEMO_USER_PASSWORD },
-  { role: "staff", email: "teacher@demo.edutrack.test", password: process.env.DEMO_USER_PASSWORD },
-  { role: "viewer", email: "viewer@demo.edutrack.test", password: process.env.DEMO_USER_PASSWORD },
-] as const
+import type { TestRole } from "../support/test-accounts"
 
-export type DemoRole = (typeof ACCOUNTS)[number]["role"]
+export const storageFor = (role: TestRole) => `tests/e2e/.auth/${role}.json`
 
-export const storageFor = (role: DemoRole) => `tests/e2e/.auth/${role}.json`
-
-/** Fails the test on any serious or critical WCAG 2.x A/AA violation (CLAUDE.md §9). */
+/** Fails the test on any serious or critical WCAG 2.x A/AA violation. */
 export async function expectNoA11yViolations(page: Page) {
   const results = await new AxeBuilder({ page })
     .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])

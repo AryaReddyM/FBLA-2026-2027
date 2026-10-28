@@ -27,7 +27,6 @@ export type NavItem = {
   exact?: boolean
 }
 
-/** Links shown directly in the top bar on large screens. */
 export const PRIMARY_NAV: NavItem[] = [
   { title: "Dashboard", href: "/", icon: LayoutDashboard, exact: true },
   { title: "Catalog", href: "/inventory", icon: Boxes },
@@ -37,7 +36,6 @@ export const PRIMARY_NAV: NavItem[] = [
   { title: "Activity", href: "/audit", icon: History, permission: "audit.view" },
 ]
 
-/** The "Admin" menu in the top bar. */
 export const ADMIN_NAV: NavItem[] = [
   { title: "Institution", href: "/settings", icon: Building2, permission: "settings.institution", exact: true },
   { title: "Categories", href: "/settings/categories", icon: FolderTree, permission: "settings.catalog" },
@@ -48,7 +46,6 @@ export const ADMIN_NAV: NavItem[] = [
 
 export type NavGroup = { label: string; items: NavItem[] }
 
-/** Everything, grouped, for the phone menu. */
 export const NAV_GROUPS: NavGroup[] = [
   {
     label: "Inventory",

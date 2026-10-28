@@ -20,11 +20,11 @@ for (const width of [1024, 1280, 1440, 1920]) {
 
 test("hero search goes to the filtered catalog", async ({ page }) => {
   await page.goto("/")
-  await page.getByRole("searchbox", { name: /Search by name/ }).fill("Chromebook")
+  await page.getByRole("searchbox", { name: /Search by name/ }).fill("Test projector")
   await page.getByLabel("Format").selectOption("physical")
   await page.getByRole("button", { name: "Search catalog" }).click()
-  await expect(page).toHaveURL(/\/inventory\?q=Chromebook&kind=physical/)
+  await expect(page).toHaveURL(/\/inventory\?q=Test\+projector&kind=physical/)
   await waitForContent(page)
   await expect(page.getByRole("heading", { name: "Browse the catalog" })).toBeVisible()
-  await expect(page.locator("table").getByText(/Chromebook/).first()).toBeVisible()
+  await expect(page.locator("table").getByText(/Test projector/).first()).toBeVisible()
 })

@@ -90,7 +90,6 @@
   --input: #7f9187;
   --ring: #1f7a4c;
 
-  /* Hero bands and top navigation */
   --brand: #032b17;
   --brand-foreground: #ffffff;
   --brand-muted: rgb(255 255 255 / 0.8);
@@ -300,7 +299,6 @@ html[data-spacing="wide"] p + p {
   margin-top: 1em;
 }
 
-/* Underline every link, not just the ones in sentences. */
 html[data-links="underline"] a:not([data-slot="button"]) {
   text-decoration: underline !important;
   text-underline-offset: 0.2em;

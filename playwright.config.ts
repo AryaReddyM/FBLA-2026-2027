@@ -1,12 +1,8 @@
+import { existsSync } from "node:fs"
+
 import { defineConfig, devices } from "@playwright/test"
 
-// E2E tests sign in with the seeded demo accounts, so they need .env.local
-// (Supabase keys + demo passwords) and `npm run db:seed` to have run.
-try {
-  process.loadEnvFile(".env.local")
-} catch {
-  // CI can provide the variables directly instead.
-}
+if (existsSync(".env.local")) process.loadEnvFile(".env.local")
 
 const PORT = Number(process.env.E2E_PORT ?? 3000)
 
@@ -23,7 +19,8 @@ export default defineConfig({
     trace: "retain-on-failure",
   },
   projects: [
-    { name: "setup", testMatch: /auth\.setup\.ts/ },
+    { name: "setup", testMatch: /auth\.setup\.ts/, teardown: "cleanup" },
+    { name: "cleanup", testMatch: /cleanup\.teardown\.ts/ },
     { name: "chromium", use: { ...devices["Desktop Chrome"] }, dependencies: ["setup"], testIgnore: /responsive\.spec\.ts/ },
     { name: "mobile", use: { ...devices["Pixel 7"] }, dependencies: ["setup"], testMatch: /responsive\.spec\.ts/ },
   ],

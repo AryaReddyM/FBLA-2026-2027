@@ -21,7 +21,6 @@ export type QuickSearchResult = {
 
 const querySchema = z.string().trim().min(1).max(200)
 
-/** Powers the Ctrl+K command palette. */
 export async function quickSearch(
   rawQuery: string
 ): Promise<ActionResult<{ results: QuickSearchResult[]; total: number }>> {

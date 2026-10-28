@@ -226,9 +226,6 @@ isOneToOne: false
             "admin_clear_inventory":
 { Args: Record<PropertyKey, never>; Returns: Json
                            },
-"admin_load_demo_data":
-{ Args: { "p": Json }; Returns: Json
-                           },
 "borrower_label":
 { Args: { "p_name": string,"p_ref": string,"p_type": Database["public"]['Enums']["borrower_type"] }; Returns: string
                            },

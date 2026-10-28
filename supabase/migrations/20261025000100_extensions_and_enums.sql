@@ -1,5 +1,3 @@
--- Extensions and enum types used across the schema.
-
 -- pg_trgm gives us fuzzy "did you mean" matching (similarity()) for search and
 -- duplicate detection. unaccent lets "Jose" match "José".
 create extension if not exists pg_trgm with schema extensions;

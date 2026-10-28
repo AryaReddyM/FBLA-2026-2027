@@ -5,7 +5,7 @@ import { storageFor, waitForContent } from "./helpers"
 test.describe("signing in and out", () => {
   test("wrong password shows a friendly error", async ({ page }) => {
     await page.goto("/login")
-    await page.locator("#field-email").first().fill("admin@demo.edutrack.test")
+    await page.locator("#field-email").first().fill("nobody@edutrack-tests.example")
     await page.locator("input#field-password").fill("definitely-wrong")
     await page.getByRole("button", { name: "Sign in" }).click()
     await expect(page.getByRole("alert").filter({ hasText: "don't match" })).toBeVisible()

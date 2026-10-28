@@ -98,14 +98,12 @@ export async function saveAsset(
     if (!existing) return fail("Item not found.")
     if (!canEditAsset(user.role, user.id, existing.created_by)) return fail("You can only edit items you added.")
   }
-  // Retiring or marking lost is for admins and managers.
   if (!can(user.role, "assets.retire") && (v.status === "retired" || v.status === "lost")) {
     return fail("Only admins and managers can retire items or mark them lost.", {
       status: ["Choose Available or In repair."],
     })
   }
 
-  // Custom fields come from the chosen category's definitions.
   let customFields: Record<string, string | number | null> = {}
   if (v.category_id) {
     const { data: category } = await supabase
@@ -192,7 +190,6 @@ export async function saveAsset(
   return ok({ id: data[0].id, asset_tag: data[0].asset_tag })
 }
 
-/** Retire, mark lost, send to repair, or mark available again. */
 export async function changeAssetStatus(input: z.input<typeof assetStatusChangeSchema>): Promise<ActionResult> {
   const user = await getCurrentUser()
   if (!can(user.role, "assets.retire")) return fail("You don't have permission to change an item's status.")
@@ -222,7 +219,6 @@ export async function moveAsset(assetId: string, locationId: string): Promise<Ac
   return bulkUpdateAssets({ action: "move", ids: [assetId], location_id: locationId }).then((r) => (r.ok ? ok() : r))
 }
 
-/** Catalog bulk actions: move many items to a location, or change their status. */
 export async function bulkUpdateAssets(input: BulkAction): Promise<ActionResult<{ count: number }>> {
   const user = await getCurrentUser()
   if (!can(user.role, "assets.write")) return fail("Only admins and managers can update items.")
@@ -271,8 +267,6 @@ export async function deleteAsset(assetId: string): Promise<ActionResult> {
   revalidateInventory()
   return ok()
 }
-
-// --- Photos -----------------------------------------------------------------
 
 /** Checks the file's first bytes, not just its claimed type, so a renamed file can't sneak through. */
 function sniffImageType(bytes: Uint8Array): (typeof ALLOWED_PHOTO_TYPES)[number] | null {

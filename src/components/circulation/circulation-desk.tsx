@@ -54,7 +54,6 @@ export function CirculationDesk({ defaultLoanDays, initialAssetId, initialMode =
     setResult(found)
     setCheckinId(found?.openCheckouts[0]?.id ?? null)
     if (found) {
-      // Pick the mode that makes sense for what was scanned.
       if (found.asset.kind === "physical") setMode(found.asset.status === "checked_out" ? "in" : "out")
     }
   }
@@ -111,7 +110,6 @@ export function CirculationDesk({ defaultLoanDays, initialAssetId, initialMode =
     setResult(null)
     setQuery("")
     router.refresh()
-    // Ready for the next student in line.
     setTimeout(() => inputRef.current?.focus(), 50)
   }
 

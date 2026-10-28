@@ -187,7 +187,6 @@ export async function getOpenCheckouts(assetId: string) {
 
 export type OpenCheckout = Awaited<ReturnType<typeof getOpenCheckouts>>[number]
 
-/** Every change and loan for one asset, newest first. */
 export async function getAssetTimeline(assetId: string, canViewAudit: boolean) {
   const supabase = await createClient()
 
@@ -208,7 +207,7 @@ export async function getAssetTimeline(assetId: string, canViewAudit: boolean) {
     }))
   }
 
-  // Staff and viewers can't read the audit log (§7), so show loan history instead.
+  // Staff and viewers can't read the audit log, so show loan history instead.
   const { data } = await supabase
     .from("checkouts")
     .select(

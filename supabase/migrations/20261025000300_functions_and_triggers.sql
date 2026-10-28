@@ -1,8 +1,3 @@
--- Helper functions and triggers: timestamps, profiles, roles, asset tags.
-
--- ---------------------------------------------------------------------------
--- updated_at maintenance
--- ---------------------------------------------------------------------------
 create or replace function public.set_updated_at()
 returns trigger
 language plpgsql
@@ -30,10 +25,6 @@ begin
 end;
 $$;
 
--- ---------------------------------------------------------------------------
--- Roles
--- ---------------------------------------------------------------------------
-
 -- Used inside RLS policies. SECURITY DEFINER lets it read profiles without
 -- tripping the profiles table's own RLS (which would recurse). Inactive users
 -- get NULL, so every policy treats them as having no access at all.
@@ -57,9 +48,7 @@ as $$
   select coalesce(public.current_user_role() = any (roles), false)
 $$;
 
--- ---------------------------------------------------------------------------
 -- Profiles: one row per auth user, created automatically on sign-up.
--- ---------------------------------------------------------------------------
 create or replace function public.handle_new_user()
 returns trigger
 language plpgsql
@@ -120,7 +109,7 @@ set search_path = public
 as $$
 begin
   if new.role is distinct from old.role or new.is_active is distinct from old.is_active then
-    -- auth.uid() is null for the service role (seed scripts), which is trusted.
+    -- auth.uid() is null for the service role (setup scripts), which is trusted.
     if auth.uid() is not null and public.current_user_role() is distinct from 'admin' then
       raise exception 'Only an admin can change roles or deactivate accounts.' using errcode = '42501';
     end if;
@@ -144,9 +133,7 @@ create trigger protect_profile_columns
   before update on public.profiles
   for each row execute function public.protect_profile_columns();
 
--- ---------------------------------------------------------------------------
 -- Asset tags: PREFIX-YYYY-000123
--- ---------------------------------------------------------------------------
 create or replace function public.next_asset_tag()
 returns text
 language plpgsql

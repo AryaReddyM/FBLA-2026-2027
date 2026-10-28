@@ -10,7 +10,7 @@ function toDate(value: DateInput): Date | null {
   return Number.isNaN(d.getTime()) ? null : d
 }
 
-/** "Oct 25, 2026" (the house style from CLAUDE.md §14). */
+/** "Oct 25, 2026", the app's date style. */
 export function formatDate(value: DateInput, fallback = "—"): string {
   const d = toDate(value)
   return d ? format(d, "MMM d, yyyy") : fallback

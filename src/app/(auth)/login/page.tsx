@@ -3,7 +3,6 @@ import { Suspense } from "react"
 
 import { LoginForm } from "@/components/auth/login-form"
 import { Skeleton } from "@/components/ui/skeleton"
-import { DEMO_ACCOUNTS, isDemoMode } from "@/lib/config"
 
 export const metadata: Metadata = { title: "Sign in" }
 
@@ -17,13 +16,8 @@ async function LoginContent({ searchParams }: { searchParams: PageProps<"/login"
   const params = await searchParams
   const errorKey = typeof params.error === "string" ? params.error : undefined
   const next = typeof params.next === "string" ? params.next : undefined
-  const showDemo = isDemoMode()
   return (
-    <LoginForm
-      next={next}
-      initialError={errorKey ? (ERRORS[errorKey] ?? null) : null}
-      demoAccounts={showDemo ? DEMO_ACCOUNTS.map((a) => ({ email: a.email, role: a.role })) : []}
-    />
+    <LoginForm next={next} initialError={errorKey ? (ERRORS[errorKey] ?? null) : null} />
   )
 }
 

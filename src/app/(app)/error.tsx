@@ -7,7 +7,6 @@ import { EmptyState } from "@/components/layout/empty-state"
 import { PageContainer } from "@/components/layout/page-header"
 import { Button } from "@/components/ui/button"
 
-/** Shown if a page fails to load (for example, the database is unreachable). */
 export default function AppError({ error, retry }: { error: Error & { digest?: string }; retry: () => void }) {
   return (
     <PageContainer>

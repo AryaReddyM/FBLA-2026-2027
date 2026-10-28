@@ -66,7 +66,6 @@ function writeStored(key: string, value: string) {
   }
 }
 
-/** Returns the stored value if it's one of the allowed ones, otherwise the default. */
 function pick<T extends string>(key: string, allowed: readonly T[], fallback: T): T {
   const value = readStored(key)
   return allowed.includes(value as T) ? (value as T) : fallback
