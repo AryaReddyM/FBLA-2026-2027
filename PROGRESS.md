@@ -19,6 +19,18 @@ All features in CLAUDE.md §8 are implemented (M0–M7, plus the §8.10 Impact c
 | M8 | Review | 🟡 E2E + axe suite: 36/36 pass (0 serious/critical violations on every page, incl. high contrast + dark + 150% text; phone layout). Lighthouse not run yet |
 | M9 | Deploy | ⏳ Vercel + Supabase cloud (README has the steps) |
 
+## Staff can add items · tracking metrics · more accessibility (Oct 28, 2026)
+
+- **Staff can add items** (owner decision; CLAUDE.md §7 table updated). Migration `20261028000200_staff_can_add_items.sql`: staff may insert assets and edit/photo the ones they added; retiring, marking lost and deleting stay admin/manager-only (trigger), and bulk actions, import and settings are unchanged. Live RLS tests and PGlite checks (62/62) cover it.
+- **Tracking metrics**: the dashboard and catalog stats cards show Catalog units, Available now (with % ready to lend) and Digital access (seats assigned, renewals); the dashboard adds Checked out (with overdue) and Catalog value.
+- **Add inventory + View annual summary** side by side in the dashboard hero and the catalog. Annual summary = Annual Inventory Report (now with this school year's checked-out / checked-in / still-out / overdue counts) for admins and managers, and the year's checkout activity for staff.
+- **New accessibility features** in Display preferences: reading font (Atkinson Hyperlegible, Lexend), wider text spacing (WCAG 1.4.12), underline all links, stronger focus outline, reading guide, read aloud (built-in speech, works offline) with a floating Stop button, keyboard shortcuts (Alt+A, ?, Ctrl+K) with a shortcuts list.
+
+## First three accounts are admins (Oct 28, 2026)
+
+- New migration `20261028000100_first_three_admins.sql`: the first three accounts created in a project become admins (was: only the first). An advisory lock stops two simultaneous sign-ups from both counting as "third". Pushed to the demo project, where it changes nothing because it already has 5 accounts. The real school project gets it on `npm run school:setup`.
+- CLAUDE.md §7 still says new sign-ups default to staff and the seed's first user is admin. This is an owner-requested extension; suggest updating that line.
+
 ## Redesign to match the Figma mockup (Oct 28, 2026)
 
 - New visual language from the team's mockup (`Screenshot 2026-10-28 100755.png`): deep forest-green bands, lime eyebrow lines and primary actions, white cards on a mint-grey page, pill buttons, Inter font.

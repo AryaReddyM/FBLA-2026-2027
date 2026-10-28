@@ -1,12 +1,13 @@
 import type { Metadata } from "next"
 import Link from "next/link"
-import { notFound } from "next/navigation"
+import { notFound, redirect } from "next/navigation"
 import { Suspense } from "react"
 
 import { AssetForm } from "@/components/inventory/asset-form"
 import { PageContainer, PageHeader, PageHeaderSkeleton } from "@/components/layout/page-header"
 import { Skeleton } from "@/components/ui/skeleton"
 import { requirePermission } from "@/lib/auth"
+import { can, canEditAsset } from "@/lib/permissions"
 import { getAsset } from "@/lib/queries/assets"
 import { getCategories, getLocations } from "@/lib/queries/settings"
 import { emptyAssetForm } from "@/lib/validation/asset"
@@ -33,10 +34,12 @@ export default function EditItemPage(props: PageProps<"/inventory/[id]/edit">) {
 }
 
 async function EditForm({ params }: { params: PageProps<"/inventory/[id]/edit">["params"] }) {
-  const user = await requirePermission("assets.write")
+  const user = await requirePermission("assets.create")
   const { id } = await params
   const [asset, categories, locations] = await Promise.all([getAsset(id), getCategories(), getLocations()])
   if (!asset) notFound()
+  // Staff can edit only items they added.
+  if (!canEditAsset(user.role, user.id, asset.created_by)) redirect(`/inventory/${asset.id}`)
 
   const license = asset.license
   const custom = (
@@ -97,6 +100,7 @@ async function EditForm({ params }: { params: PageProps<"/inventory/[id]/edit">[
         locations={locations.map((l) => ({ value: l.id, label: l.name }))}
         nextTag={null}
         canEditTag={user.role === "admin"}
+        canRetire={can(user.role, "assets.retire")}
         lockedStatus={asset.status === "checked_out" ? "checked_out" : null}
       />
     </>

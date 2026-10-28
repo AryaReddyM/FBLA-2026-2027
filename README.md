@@ -49,8 +49,8 @@ You need Node.js 22+ and a free [Supabase](https://supabase.com) account.
 ### Adding real people
 
 - **Recommended:** an admin adds them in **Settings → Users & roles** with a starting password. They can sign in immediately on any device.
-- **Self sign-up** (`/signup`) also works and starts people as Staff. Supabase's built-in email service only delivers to your project's team members and is rate-limited, so either set up custom SMTP (Authentication → Emails) or turn off *Confirm email* (Authentication → Sign In / Providers → Email) for the demo.
-- The first account ever created in a fresh project automatically becomes the admin.
+- **Self sign-up** (`/signup`) also works; after the first three accounts, it starts people as Staff. Supabase's built-in email service only delivers to your project's team members and is rate-limited, so either set up custom SMTP (Authentication → Emails) or turn off *Confirm email* (Authentication → Sign In / Providers → Email) for the demo.
+- The first **three** accounts created in a fresh project automatically become admins, so a school's founding team can all manage it. Everyone after that starts as Staff until an admin changes their role.
 
 ## Two projects: FBLA demo and your real school
 

@@ -1,12 +1,13 @@
 import { describe, expect, it } from "vitest"
 
-import { can, type Permission, type Role } from "@/lib/permissions"
+import { can, canEditAsset, type Permission, type Role } from "@/lib/permissions"
 
 // The table from CLAUDE.md §7, written out independently so a change to
 // permissions.ts that doesn't match the spec fails this test.
 const EXPECTED: Record<Permission, Role[]> = {
   "catalog.view": ["admin", "manager", "staff", "viewer"],
   "circulation.use": ["admin", "manager", "staff"],
+  "assets.create": ["admin", "manager", "staff"],
   "assets.write": ["admin", "manager"],
   "assets.retire": ["admin", "manager"],
   "reports.all": ["admin", "manager"],
@@ -29,6 +30,14 @@ describe("permission map", () => {
       })
     }
   }
+
+  it("staff can edit only the items they added; admins and managers can edit any", () => {
+    expect(canEditAsset("staff", "u1", "u1")).toBe(true)
+    expect(canEditAsset("staff", "u1", "u2")).toBe(false)
+    expect(canEditAsset("staff", "u1", null)).toBe(false)
+    expect(canEditAsset("manager", "u1", "u2")).toBe(true)
+    expect(canEditAsset("viewer", "u1", "u1")).toBe(false)
+  })
 
   it("denies everything when there is no role (signed out or deactivated)", () => {
     expect(can(null, "catalog.view")).toBe(false)

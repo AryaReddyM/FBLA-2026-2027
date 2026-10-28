@@ -67,7 +67,10 @@ type Props = {
   openLoans: OpenLoan[]
   seatsFull: boolean
   canCirculate: boolean
+  /** Can edit this item (admins/managers: any; staff: their own). */
   canEdit: boolean
+  /** Move, change status, retire (admins/managers only). */
+  canManage: boolean
   isAdmin: boolean
   locations: { value: string; label: string }[]
   defaultLoanDays: number
@@ -113,6 +116,7 @@ export function AssetActions({
   seatsFull,
   canCirculate,
   canEdit,
+  canManage,
   isAdmin,
   locations,
   defaultLoanDays,
@@ -180,7 +184,7 @@ export function AssetActions({
         </Link>
       </Button>
 
-      {canEdit ? (
+      {canManage ? (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" size="icon" aria-label="More actions">

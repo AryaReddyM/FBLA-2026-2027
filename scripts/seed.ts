@@ -31,7 +31,8 @@ if (!userPassword || userPassword.length < 8) fail("Set DEMO_USER_PASSWORD (8+ c
 const supabase = createClient(url, serviceKey, { auth: { autoRefreshToken: false, persistSession: false } })
 
 // Mirrors DEMO_ACCOUNTS in src/lib/config.ts. The admin is created first, so
-// on a brand-new project it is also the "first user" the database makes admin.
+// on a brand-new project it is one of the first three accounts the database makes admins.
+// The roles below are then set explicitly, so the other demo accounts get their own roles.
 const ACCOUNTS = [
   { key: "admin", email: "admin@demo.edutrack.test", role: "admin", name: "Alex Rivera", department: "Technology", password: adminPassword },
   { key: "manager", email: "manager@demo.edutrack.test", role: "manager", name: "Jordan Patel", department: "Library & Media", password: userPassword },

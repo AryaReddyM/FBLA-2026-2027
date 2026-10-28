@@ -30,9 +30,19 @@ export function ReportPreview({ data, durationMs }: { data: ReportData; duration
   const sections = limitRows(data)
 
   const renderRow = (row: ReportRow, key: string, kind?: "subtotal" | "total") => (
-    <TableRow key={key} className={cn(kind === "subtotal" && "bg-muted/60 font-medium", kind === "total" && "bg-accent font-semibold")}>
+    <TableRow
+      key={key}
+      className={cn(kind === "subtotal" && "bg-muted/60 font-medium", kind === "total" && "bg-accent font-semibold")}
+    >
       {cols.map((c) => (
-        <TableCell key={c.key} className={cn("text-sm", isNumeric(c.format) && "text-right tabular-nums", c.key === "asset_tag" && "font-mono text-xs")}>
+        <TableCell
+          key={c.key}
+          className={cn(
+            "text-sm",
+            isNumeric(c.format) && "text-right tabular-nums",
+            c.key === "asset_tag" && "font-mono text-xs",
+          )}
+        >
           {formatCell(row[c.key], c.format)}
         </TableCell>
       ))}
@@ -51,7 +61,10 @@ export function ReportPreview({ data, durationMs }: { data: ReportData; duration
             </CardDescription>
           </div>
           {/* Generation time on screen (CLAUDE.md §8.7), to show the speed-up the paper measured. */}
-          <p className="inline-flex items-center gap-1.5 rounded-full border bg-success-soft px-3 py-1 text-sm font-medium text-success" role="status">
+          <p
+            className="inline-flex items-center gap-1.5 rounded-full border bg-success-soft px-3 py-1 text-sm font-medium text-success"
+            role="status"
+          >
             <Timer className="size-4" aria-hidden="true" /> Built in {formatDuration(durationMs)}
           </p>
         </div>
@@ -69,7 +82,12 @@ export function ReportPreview({ data, durationMs }: { data: ReportData; duration
         {data.rowCount === 0 ? (
           <p className="py-8 text-center text-sm text-muted-foreground">No records match these filters.</p>
         ) : (
-          <div className="max-h-[36rem] overflow-auto rounded-lg border" tabIndex={0} role="region" aria-label={`${data.title} preview`}>
+          <div
+            className="max-h-[36rem] overflow-auto rounded-lg border"
+            tabIndex={0}
+            role="region"
+            aria-label={`${data.title} preview`}
+          >
             <Table containerClassName="overflow-visible">
               <caption className="sr-only">{data.title} preview</caption>
               <TableHeader className="sticky top-0 z-10 bg-muted">
@@ -102,9 +120,11 @@ export function ReportPreview({ data, durationMs }: { data: ReportData; duration
                             </TableRow>
                           ) : null}
                           {group.rows.map((row, ri) => renderRow(row, `${si}-${gi}-${ri}`))}
-                          {group.subtotal && group.complete ? renderRow(group.subtotal, `${si}-${gi}-sub`, "subtotal") : null}
+                          {group.subtotal && group.complete
+                            ? renderRow(group.subtotal, `${si}-${gi}-sub`, "subtotal")
+                            : null}
                         </Fragment>
-                      )
+                      ),
                     )}
                     {section.subtotal && section.complete ? renderRow(section.subtotal, `${si}-total`, "total") : null}
                   </Fragment>
@@ -116,7 +136,8 @@ export function ReportPreview({ data, durationMs }: { data: ReportData; duration
         )}
         {data.rowCount > PREVIEW_LIMIT ? (
           <p className="text-sm text-muted-foreground">
-            Showing the first {formatNumber(PREVIEW_LIMIT)} of {formatNumber(data.rowCount)} rows. Exports include everything.
+            Showing the first {formatNumber(PREVIEW_LIMIT)} of {formatNumber(data.rowCount)} rows. Exports include
+            everything.
           </p>
         ) : null}
         <ul className="space-y-1 text-xs text-muted-foreground">

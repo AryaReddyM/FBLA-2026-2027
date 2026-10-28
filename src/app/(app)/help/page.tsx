@@ -131,14 +131,17 @@ const GUIDES: Guide[] = [
   {
     id: "accessibility",
     icon: Accessibility,
-    title: "Make text bigger or switch to high contrast",
+    title: "Make EduTrack easier to see, read and use",
     who: "Everyone",
     steps: [
-      "Press the accessibility button (the person icon) at the top right.",
-      "Choose a text size from 100% to 150%, turn on High contrast, or pick Light, Dark or Match my device.",
-      "Your choice is remembered on this device.",
+      "Press the “Aa Accessibility” button in the bottom-right corner of any page (or press Alt + A).",
+      "Text: choose a size from Standard to Largest, a reading font (Hyperlegible for low vision, Easy reading to reduce eye strain), or wider spacing between lines and letters.",
+      "Color: Standard, High contrast, or Color-safe contrast (for color blindness), in Light, Dark or your device's theme.",
+      "Reading aids: underline every link, a thicker keyboard focus outline, a reading guide that follows your pointer, and Reduce motion.",
+      "Read aloud: select some text (or nothing, for the whole page) and press Read aloud. A Stop reading button stays on screen.",
+      "Your choices are remembered on this device. Reset preferences puts everything back.",
     ],
-    tip: "Everything works with a keyboard: Tab moves between controls, Esc closes dialogs, and Ctrl + K opens search.",
+    tip: "Everything works with a keyboard: Tab moves between controls, Esc closes dialogs, Ctrl + K opens search, and ? lists every shortcut.",
   },
   {
     id: "roles",
@@ -148,7 +151,7 @@ const GUIDES: Guide[] = [
     steps: [
       "Admin: everything, including users, roles, categories, locations and settings.",
       "Manager: register, edit and retire items; run every report; import; view the activity log.",
-      "Staff (teachers): check items in and out, and run a report of their own checkouts.",
+      "Staff (teachers): add items and edit the ones they added, check items in and out, and run a report of their own checkouts.",
       "Viewer: read-only access to the catalog and dashboard.",
     ],
   },

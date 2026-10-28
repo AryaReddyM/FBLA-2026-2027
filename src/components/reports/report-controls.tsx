@@ -46,7 +46,7 @@ export function ReportControls({ type, usesLocation, usesDates, locations, value
     setExporting(format)
     try {
       const res = await fetch(
-        withQuery(`/api/reports/${type}`, { location_id: query.location_id, from: query.from, to: query.to, format })
+        withQuery(`/api/reports/${type}`, { location_id: query.location_id, from: query.from, to: query.to, format }),
       )
       if (!res.ok) {
         const body = (await res.json().catch(() => null)) as { error?: string } | null
@@ -101,11 +101,24 @@ export function ReportControls({ type, usesLocation, usesDates, locations, value
           <>
             <div className="space-y-1">
               <Label htmlFor="report-from">From</Label>
-              <Input id="report-from" type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="w-44" />
+              <Input
+                id="report-from"
+                type="date"
+                value={from}
+                onChange={(e) => setFrom(e.target.value)}
+                className="w-44"
+              />
             </div>
             <div className="space-y-1">
               <Label htmlFor="report-to">To</Label>
-              <Input id="report-to" type="date" value={to} min={from || undefined} onChange={(e) => setTo(e.target.value)} className="w-44" />
+              <Input
+                id="report-to"
+                type="date"
+                value={to}
+                min={from || undefined}
+                onChange={(e) => setTo(e.target.value)}
+                className="w-44"
+              />
             </div>
           </>
         ) : null}

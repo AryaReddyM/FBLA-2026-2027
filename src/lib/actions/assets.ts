@@ -6,7 +6,7 @@ import { z } from "zod"
 import { fail, friendlyDbError, ok, type ActionResult } from "@/lib/action-result"
 import { getCurrentUser } from "@/lib/auth"
 import { ALLOWED_PHOTO_TYPES, MAX_PHOTO_BYTES } from "@/lib/config"
-import { can } from "@/lib/permissions"
+import { can, canEditAsset } from "@/lib/permissions"
 import { createClient } from "@/lib/supabase/server"
 import {
   assetFormSchema,
@@ -43,7 +43,9 @@ export type DuplicateMatch = {
 }
 
 /** Checked before saving: same serial number, or a very similar name + model. */
-export async function findDuplicates(input: z.input<typeof duplicateCheckSchema>): Promise<ActionResult<DuplicateMatch[]>> {
+export async function findDuplicates(
+  input: z.input<typeof duplicateCheckSchema>,
+): Promise<ActionResult<DuplicateMatch[]>> {
   await getCurrentUser()
   const parsed = duplicateCheckSchema.safeParse(input)
   if (!parsed.success) return ok([])
@@ -66,7 +68,7 @@ export async function findDuplicates(input: z.input<typeof duplicateCheckSchema>
       model: d.model,
       serial_number: d.serial_number,
       reason: d.reason === "serial" ? "serial" : "similar",
-    }))
+    })),
   )
 }
 
@@ -78,17 +80,30 @@ export async function findDuplicates(input: z.input<typeof duplicateCheckSchema>
 export async function saveAsset(
   assetId: string | null,
   input: AssetFormInput,
-  meta?: { formDurationMs?: number }
+  meta?: { formDurationMs?: number },
 ): Promise<ActionResult<{ id: string; asset_tag: string }>> {
   const user = await getCurrentUser()
-  if (!can(user.role, "assets.write")) return fail("Only admins and managers can register or edit items.")
   if (assetId !== null && !idSchema.safeParse(assetId).success) return fail("Invalid item.")
+  if (!can(user.role, "assets.create")) return fail("Your role can't add or edit items.")
 
   const parsed = assetFormSchema.safeParse(input)
   if (!parsed.success) return fail("Please fix the highlighted fields.", fieldErrorsOf(parsed.error))
   const v = parsed.data
 
   const supabase = await createClient()
+
+  // Staff can edit only the items they added (RLS enforces this too).
+  if (assetId !== null) {
+    const { data: existing } = await supabase.from("assets").select("created_by").eq("id", assetId).maybeSingle()
+    if (!existing) return fail("Item not found.")
+    if (!canEditAsset(user.role, user.id, existing.created_by)) return fail("You can only edit items you added.")
+  }
+  // Retiring or marking lost is for admins and managers.
+  if (!can(user.role, "assets.retire") && (v.status === "retired" || v.status === "lost")) {
+    return fail("Only admins and managers can retire items or mark them lost.", {
+      status: ["Choose Available or In repair."],
+    })
+  }
 
   // Custom fields come from the chosen category's definitions.
   let customFields: Record<string, string | number | null> = {}
@@ -108,7 +123,7 @@ export async function saveAsset(
     if (!checked.ok) {
       return fail(
         "Please fix the highlighted fields.",
-        Object.fromEntries(Object.entries(checked.errors).map(([k, m]) => [`custom_fields.${k}`, [m]]))
+        Object.fromEntries(Object.entries(checked.errors).map(([k, m]) => [`custom_fields.${k}`, [m]])),
       )
     }
     customFields = checked.values
@@ -204,9 +219,7 @@ export async function changeAssetStatus(input: z.input<typeof assetStatusChangeS
 }
 
 export async function moveAsset(assetId: string, locationId: string): Promise<ActionResult> {
-  return bulkUpdateAssets({ action: "move", ids: [assetId], location_id: locationId }).then((r) =>
-    r.ok ? ok() : r
-  )
+  return bulkUpdateAssets({ action: "move", ids: [assetId], location_id: locationId }).then((r) => (r.ok ? ok() : r))
 }
 
 /** Catalog bulk actions: move many items to a location, or change their status. */
@@ -220,7 +233,11 @@ export async function bulkUpdateAssets(input: BulkAction): Promise<ActionResult<
   const action = parsed.data
   let query
   if (action.action === "move") {
-    query = supabase.from("assets").update({ location_id: action.location_id }).in("id", action.ids).is("deleted_at", null)
+    query = supabase
+      .from("assets")
+      .update({ location_id: action.location_id })
+      .in("id", action.ids)
+      .is("deleted_at", null)
   } else {
     // Items that are out on loan keep "checked out" until they're checked in.
     query = supabase
@@ -242,7 +259,12 @@ export async function deleteAsset(assetId: string): Promise<ActionResult> {
   if (user.role !== "admin") return fail("Only admins can delete items. Managers can retire them instead.")
   if (!idSchema.safeParse(assetId).success) return fail("Invalid item.")
   const supabase = await createClient()
-  const { data: open } = await supabase.from("checkouts").select("id").eq("asset_id", assetId).is("returned_at", null).limit(1)
+  const { data: open } = await supabase
+    .from("checkouts")
+    .select("id")
+    .eq("asset_id", assetId)
+    .is("returned_at", null)
+    .limit(1)
   if (open && open.length > 0) return fail("Check this item in (or release its seats) before deleting it.")
   const { error } = await supabase.from("assets").update({ deleted_at: new Date().toISOString() }).eq("id", assetId)
   if (error) return fail(friendlyDbError(error))
@@ -262,10 +284,17 @@ function sniffImageType(bytes: Uint8Array): (typeof ALLOWED_PHOTO_TYPES)[number]
   return null
 }
 
-export async function uploadAssetPhoto(assetId: string, formData: FormData): Promise<ActionResult<{ path: string }>> {
+/** Photos follow the same rule as editing: admins/managers any item, staff their own. */
+async function canChangePhoto(assetId: string) {
   const user = await getCurrentUser()
-  if (!can(user.role, "assets.write")) return fail("Only admins and managers can change photos.")
-  if (!idSchema.safeParse(assetId).success) return fail("Invalid item.")
+  if (!idSchema.safeParse(assetId).success) return false
+  const supabase = await createClient()
+  const { data } = await supabase.from("assets").select("created_by").eq("id", assetId).maybeSingle()
+  return !!data && canEditAsset(user.role, user.id, data.created_by)
+}
+
+export async function uploadAssetPhoto(assetId: string, formData: FormData): Promise<ActionResult<{ path: string }>> {
+  if (!(await canChangePhoto(assetId))) return fail("You can only change photos of items you can edit.")
 
   const file = formData.get("photo")
   if (!(file instanceof File)) return fail("Choose a photo to upload.")
@@ -297,8 +326,7 @@ export async function uploadAssetPhoto(assetId: string, formData: FormData): Pro
 }
 
 export async function removeAssetPhoto(assetId: string): Promise<ActionResult> {
-  const user = await getCurrentUser()
-  if (!can(user.role, "assets.write")) return fail("Only admins and managers can change photos.")
+  if (!(await canChangePhoto(assetId))) return fail("You can only change photos of items you can edit.")
   const supabase = await createClient()
   const { data: asset } = await supabase.from("assets").select("image_path").eq("id", assetId).maybeSingle()
   if (!asset?.image_path) return ok()

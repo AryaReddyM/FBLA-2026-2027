@@ -6,6 +6,7 @@ import { AssetForm } from "@/components/inventory/asset-form"
 import { PageContainer, PageHeader } from "@/components/layout/page-header"
 import { Skeleton } from "@/components/ui/skeleton"
 import { requirePermission } from "@/lib/auth"
+import { can } from "@/lib/permissions"
 import { getNextAssetTag } from "@/lib/actions/assets"
 import { getCategories, getLocations } from "@/lib/queries/settings"
 import { emptyAssetForm } from "@/lib/validation/asset"
@@ -32,7 +33,7 @@ export default function RegisterItemPage(props: PageProps<"/inventory/new">) {
 }
 
 async function RegisterForm({ searchParams }: { searchParams: PageProps<"/inventory/new">["searchParams"] }) {
-  const user = await requirePermission("assets.write")
+  const user = await requirePermission("assets.create")
   const [params, categories, locations, nextTag] = await Promise.all([
     searchParams,
     getCategories(),
@@ -48,7 +49,8 @@ async function RegisterForm({ searchParams }: { searchParams: PageProps<"/invent
       categories={categories.map((c) => ({ id: c.id, label: c.label, kind: c.kind, custom_fields: c.custom_fields }))}
       locations={locations.map((l) => ({ value: l.id, label: l.name }))}
       nextTag={nextTag}
-      canEditTag={user.role === "admin" || user.role === "manager"}
+      canEditTag
+      canRetire={can(user.role, "assets.retire")}
     />
   )
 }

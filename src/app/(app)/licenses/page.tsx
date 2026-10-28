@@ -59,7 +59,7 @@ async function Licenses() {
   const user = await getCurrentUser()
   const licenses = await getLicenses()
   const canCirculate = can(user.role, "circulation.use")
-  const canEdit = can(user.role, "assets.write")
+  const canEdit = can(user.role, "assets.create")
 
   if (licenses.length === 0) {
     return (

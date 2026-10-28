@@ -1,4 +1,4 @@
-import { FileBarChart, PackageSearch, PlusSquare, Upload } from "lucide-react"
+import { PackageSearch, PlusSquare, Upload } from "lucide-react"
 import type { Metadata } from "next"
 import Link from "next/link"
 import { Suspense } from "react"
@@ -6,6 +6,7 @@ import { Suspense } from "react"
 import { CatalogFilters } from "@/components/inventory/catalog-filters"
 import { CatalogTable } from "@/components/inventory/catalog-table"
 import { HeroSearch } from "@/components/inventory/hero-search"
+import { AnnualSummaryButton } from "@/components/reports/annual-summary-button"
 import { EmptyState } from "@/components/layout/empty-state"
 import { PageContainer, PageHeader, PageHeaderSkeleton, StatStrip } from "@/components/layout/page-header"
 import { PaginationNav } from "@/components/layout/pagination-nav"
@@ -117,13 +118,7 @@ async function Catalog({ searchParams }: { searchParams: PageProps<"/inventory">
             </h2>
           </div>
           <div className="flex flex-wrap gap-2">
-            {can(user.role, "reports.all") ? (
-              <Button variant="outline" asChild>
-                <Link href="/reports?type=annual_inventory">
-                  <FileBarChart aria-hidden="true" /> View annual summary
-                </Link>
-              </Button>
-            ) : null}
+            <AnnualSummaryButton role={user.role} />
             {can(user.role, "import.run") ? (
               <Button variant="outline" asChild>
                 <Link href="/settings/import">
@@ -131,7 +126,7 @@ async function Catalog({ searchParams }: { searchParams: PageProps<"/inventory">
                 </Link>
               </Button>
             ) : null}
-            {canEdit ? (
+            {can(user.role, "assets.create") ? (
               <Button asChild>
                 <Link href="/inventory/new">
                   <PlusSquare aria-hidden="true" /> Add inventory
@@ -166,7 +161,7 @@ async function Catalog({ searchParams }: { searchParams: PageProps<"/inventory">
               title="Your catalog is ready for its first asset."
               description="Staff can add books, devices, digital licenses, and other holdings here or import an existing spreadsheet."
             >
-              {canEdit ? (
+              {can(user.role, "assets.create") ? (
                 <Button asChild>
                   <Link href="/inventory/new">Add inventory</Link>
                 </Button>

@@ -16,12 +16,21 @@ import {
 } from "@/lib/labels"
 import type { Database } from "@/types/database"
 
-import { REPORT_META, type ReportData, type ReportGroup, type ReportParams, type ReportRow, type ReportSection } from "./definitions"
+import {
+  REPORT_META,
+  type ReportData,
+  type ReportGroup,
+  type ReportParams,
+  type ReportRow,
+  type ReportSection,
+} from "./definitions"
 
 type Client = SupabaseClient<Database>
 
 /** PostgREST returns at most 1,000 rows per request, so read in pages. */
-async function fetchAll<T>(page: (from: number, to: number) => PromiseLike<{ data: T[] | null; error: { message: string } | null }>) {
+async function fetchAll<T>(
+  page: (from: number, to: number) => PromiseLike<{ data: T[] | null; error: { message: string } | null }>,
+) {
   const out: T[] = []
   const size = 1000
   for (let from = 0; ; from += size) {
@@ -45,7 +54,8 @@ function schoolYearStart(startMonth: number, today = new Date()) {
   return format(new Date(startYear, startMonth - 1, 1), "yyyy-MM-dd")
 }
 
-const sum = (rows: ReportRow[], key: string) => rows.reduce((acc, r) => acc + (typeof r[key] === "number" ? (r[key] as number) : 0), 0)
+const sum = (rows: ReportRow[], key: string) =>
+  rows.reduce((acc, r) => acc + (typeof r[key] === "number" ? (r[key] as number) : 0), 0)
 const round2 = (n: number) => Math.round(n * 100) / 100
 
 type Context = {
@@ -106,7 +116,7 @@ async function loadAssets(ctx: Context, opts: { physicalOnly?: boolean } = {}) {
     let q = supabase
       .from("assets")
       .select(
-        "id, asset_tag, name, kind, status, condition, acquisition_date, acquisition_cost, location_id, category:categories(id, name, useful_life_years, parent_id), location:locations(name)"
+        "id, asset_tag, name, kind, status, condition, acquisition_date, acquisition_cost, location_id, category:categories(id, name, useful_life_years, parent_id), location:locations(name)",
       )
       .is("deleted_at", null)
       .order("asset_tag")
@@ -120,7 +130,8 @@ async function loadAssets(ctx: Context, opts: { physicalOnly?: boolean } = {}) {
   const lifeById = new Map((cats ?? []).map((c) => [c.id, c.useful_life_years]))
   return rows.map((a) => ({
     ...a,
-    usefulLife: a.category?.useful_life_years ?? (a.category?.parent_id ? (lifeById.get(a.category.parent_id) ?? null) : null),
+    usefulLife:
+      a.category?.useful_life_years ?? (a.category?.parent_id ? (lifeById.get(a.category.parent_id) ?? null) : null),
   }))
 }
 
@@ -136,6 +147,7 @@ async function scopeLabel(ctx: Context) {
 async function annualInventory(ctx: Context): Promise<Body> {
   const assets = (await loadAssets(ctx)).filter((a) => a.status !== "retired")
   const today = new Date()
+  const circulation = await yearCirculation(ctx)
 
   const byLocation = new Map<string, typeof assets>()
   for (const a of assets) {
@@ -174,14 +186,24 @@ async function annualInventory(ctx: Context): Promise<Body> {
           return {
             title: category,
             rows,
-            subtotal: { asset_tag: `${list.length} items`, name: `${category} subtotal`, cost: round2(sum(rows, "cost")), book_value: round2(sum(rows, "book_value")) },
+            subtotal: {
+              asset_tag: `${list.length} items`,
+              name: `${category} subtotal`,
+              cost: round2(sum(rows, "cost")),
+              book_value: round2(sum(rows, "book_value")),
+            },
           }
         })
       const all = groups.flatMap((g) => g.rows)
       return {
         title: location,
         groups,
-        subtotal: { asset_tag: `${items.length} items`, name: `${location} total`, cost: round2(sum(all, "cost")), book_value: round2(sum(all, "book_value")) },
+        subtotal: {
+          asset_tag: `${items.length} items`,
+          name: `${location} total`,
+          cost: round2(sum(all, "cost")),
+          book_value: round2(sum(all, "book_value")),
+        },
       }
     })
 
@@ -205,19 +227,43 @@ async function annualInventory(ctx: Context): Promise<Body> {
       { key: "book_value", label: "Book value", format: "money" },
     ],
     sections,
-    grandTotal: { asset_tag: `${assets.length} items`, name: "Grand total", cost: round2(sum(allRows, "cost")), book_value: round2(sum(allRows, "book_value")) },
+    grandTotal: {
+      asset_tag: `${assets.length} items`,
+      name: "Grand total",
+      cost: round2(sum(allRows, "cost")),
+      book_value: round2(sum(allRows, "book_value")),
+    },
     summary: [
       { label: "Items", value: formatNumber(assets.length) },
       { label: "Locations", value: formatNumber(sections.length) },
       { label: "Original cost", value: formatMoney(sum(allRows, "cost"), { whole: true }) },
       { label: "Current book value", value: formatMoney(sum(allRows, "book_value"), { whole: true }) },
+      { label: "Checked out this year", value: formatNumber(circulation.out) },
+      { label: "Checked in this year", value: formatNumber(circulation.back) },
+      { label: "Still out now", value: formatNumber(circulation.stillOut) },
+      { label: "Overdue now", value: formatNumber(circulation.overdue) },
       ...[...conditionCounts.entries()].map(([label, n]) => ({ label: `Condition: ${label}`, value: formatNumber(n) })),
     ],
     notes: [
       "Retired items are excluded. Book value uses straight-line depreciation over each category's useful life; items without enough data show their original cost.",
+      `Checked out / in counts cover the whole school since ${formatDate(circulation.since)} (the start of the school year), including digital seats.`,
     ],
     rowCount: allRows.length,
   }
+}
+
+/** How many loans went out and came back this school year (the "goods in and out" summary). */
+async function yearCirculation(ctx: Context) {
+  const since = schoolYearStart(ctx.institution.fiscal_year_start_month)
+  const count = (q: PromiseLike<{ count: number | null }>) => q.then((r) => r.count ?? 0)
+  const base = () => ctx.supabase.from("checkouts").select("id", { count: "exact", head: true })
+  const [out, back, stillOut, overdue] = await Promise.all([
+    count(base().gte("checked_out_at", `${since}T00:00:00`)),
+    count(base().gte("returned_at", `${since}T00:00:00`)),
+    count(base().is("returned_at", null)),
+    count(base().is("returned_at", null).lt("due_at", new Date().toISOString())),
+  ])
+  return { since, out, back, stillOut, overdue }
 }
 
 // ---------------------------------------------------------------------------
@@ -234,7 +280,7 @@ async function checkoutActivity(ctx: Context): Promise<Body> {
     let q = supabase
       .from("checkouts")
       .select(
-        "id, borrower_type, borrower_name, borrower_ref, checked_out_at, due_at, returned_at, condition_in, asset:assets(asset_tag, name, status, kind)"
+        "id, borrower_type, borrower_name, borrower_ref, checked_out_at, due_at, returned_at, condition_in, asset:assets(asset_tag, name, status, kind)",
       )
       .gte("checked_out_at", `${from}T00:00:00`)
       .lte("checked_out_at", `${to}T23:59:59`)
@@ -247,13 +293,7 @@ async function checkoutActivity(ctx: Context): Promise<Body> {
   const now = Date.now()
   const toRow = (c: (typeof loans)[number]): ReportRow => {
     const overdue = !c.returned_at && c.due_at && new Date(c.due_at).getTime() < now
-    const state = c.returned_at
-      ? "Returned"
-      : c.asset?.status === "lost"
-        ? "Lost"
-        : overdue
-          ? "Overdue"
-          : "Out"
+    const state = c.returned_at ? "Returned" : c.asset?.status === "lost" ? "Lost" : overdue ? "Overdue" : "Out"
     return {
       asset_tag: c.asset?.asset_tag ?? "",
       name: c.asset?.name ?? "",
@@ -321,7 +361,12 @@ async function valuation(ctx: Context): Promise<Body> {
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([category, list]) => {
       const rows = list.map((a) => {
-        const dep = straightLineDepreciation({ cost: a.acquisition_cost, acquisitionDate: a.acquisition_date, usefulLifeYears: a.usefulLife, asOf: today })
+        const dep = straightLineDepreciation({
+          cost: a.acquisition_cost,
+          acquisitionDate: a.acquisition_date,
+          usefulLifeYears: a.usefulLife,
+          asOf: today,
+        })
         return {
           asset_tag: a.asset_tag,
           name: a.name,
@@ -361,7 +406,13 @@ async function valuation(ctx: Context): Promise<Body> {
       { key: "book_value", label: "Book value", format: "money" },
     ],
     sections: [{ groups }],
-    grandTotal: { asset_tag: `${all.length} items`, name: "Grand total", cost: round2(cost), accumulated: round2(sum(all, "accumulated")), book_value: round2(book) },
+    grandTotal: {
+      asset_tag: `${all.length} items`,
+      name: "Grand total",
+      cost: round2(cost),
+      accumulated: round2(sum(all, "accumulated")),
+      book_value: round2(book),
+    },
     summary: [
       { label: "Physical items", value: formatNumber(all.length) },
       { label: "Original cost", value: formatMoney(cost, { whole: true }) },
@@ -391,7 +442,7 @@ async function licenseSummary(ctx: Context): Promise<Body> {
       .neq("status", "retired")
       .order("name"),
     fetchAll((from, to) =>
-      supabase.from("checkouts").select("asset_id").eq("asset_kind", "digital").is("returned_at", null).range(from, to)
+      supabase.from("checkouts").select("asset_id").eq("asset_kind", "digital").is("returned_at", null).range(from, to),
     ),
   ])
   if (error) throw new Error(error.message)
@@ -420,8 +471,10 @@ async function licenseSummary(ctx: Context): Promise<Body> {
   const underused = rows.filter((r) => typeof r.utilization === "number" && r.utilization < 0.5)
 
   const sections: ReportSection[] = [{ title: "All licenses", groups: [{ rows }] }]
-  if (upcoming.length) sections.push({ title: `Renewing in the next 90 days (${upcoming.length})`, groups: [{ rows: upcoming }] })
-  if (underused.length) sections.push({ title: `Under half of seats used (${underused.length})`, groups: [{ rows: underused }] })
+  if (upcoming.length)
+    sections.push({ title: `Renewing in the next 90 days (${upcoming.length})`, groups: [{ rows: upcoming }] })
+  if (underused.length)
+    sections.push({ title: `Under half of seats used (${underused.length})`, groups: [{ rows: underused }] })
 
   const annualTotal = sum(rows, "annual_cost")
   const seatsBought = sum(rows, "purchased")
@@ -448,7 +501,9 @@ async function licenseSummary(ctx: Context): Promise<Body> {
       { label: "Renewing in 90 days", value: formatNumber(upcoming.length) },
       { label: "Under half used", value: formatNumber(underused.length) },
     ],
-    notes: ["Per-year cost converts monthly and multi-year (3-year) billing to a yearly amount. Site licenses have unlimited seats."],
+    notes: [
+      "Per-year cost converts monthly and multi-year (3-year) billing to a yearly amount. Site licenses have unlimited seats.",
+    ],
     rowCount: rows.length,
   }
 }
@@ -467,7 +522,7 @@ async function auditTrail(ctx: Context): Promise<Body> {
       .gte("created_at", `${from}T00:00:00`)
       .lte("created_at", `${to}T23:59:59`)
       .order("created_at", { ascending: false })
-      .range(start, end)
+      .range(start, end),
   )
   const rows: ReportRow[] = entries.map((e) => ({
     when: e.created_at.slice(0, 16).replace("T", " "),
@@ -490,7 +545,9 @@ async function auditTrail(ctx: Context): Promise<Body> {
     sections: [{ groups: [{ rows }] }],
     summary: [
       { label: "Entries", value: formatNumber(rows.length) },
-      ...[...byAction.entries()].sort((a, b) => b[1] - a[1]).map(([label, n]) => ({ label: label[0].toUpperCase() + label.slice(1), value: formatNumber(n) })),
+      ...[...byAction.entries()]
+        .sort((a, b) => b[1] - a[1])
+        .map(([label, n]) => ({ label: label[0].toUpperCase() + label.slice(1), value: formatNumber(n) })),
     ],
     notes: ["The audit log is written by the database itself and cannot be edited or deleted from the app."],
     rowCount: rows.length,

@@ -25,7 +25,9 @@ test.describe("signing in and out", () => {
       // Staff don't get the Admin menu or the Activity log.
       await expect(nav.getByRole("button", { name: /Admin/ })).toHaveCount(0)
       await expect(nav.getByRole("link", { name: "Activity" })).toHaveCount(0)
-      await expect(page.getByRole("link", { name: "Add inventory" })).toHaveCount(0)
+      // Staff can add items (owner decision, Oct 2026) and see the annual summary of their own loans.
+      await expect(page.getByRole("link", { name: "Add inventory" }).first()).toBeVisible()
+      await expect(page.getByRole("link", { name: "View annual summary" }).first()).toHaveAttribute("href", /checkout_activity/)
 
       await page.goto("/settings/users")
       await expect(page).toHaveURL(/denied=1/)
@@ -34,6 +36,23 @@ test.describe("signing in and out", () => {
       await page.getByRole("menuitem", { name: "Sign out" }).click()
       await expect(page).toHaveURL(/\/login/)
     })
+  })
+})
+
+test.describe("staff adding items", () => {
+  test.use({ storageState: storageFor("staff") })
+  test("a teacher adds an item and can edit it, but can't retire it", async ({ page }) => {
+    const name = `E2E Staff Document Camera ${Date.now()}`
+    await page.goto("/inventory/new")
+    await page.locator("#field-name").fill(name)
+    // Staff only get Available / In repair as starting statuses.
+    await page.locator("#field-status").click()
+    await expect(page.getByRole("option", { name: "Retired" })).toHaveCount(0)
+    await page.keyboard.press("Escape")
+    await page.getByRole("button", { name: "Register item" }).click()
+    await expect(page.getByRole("heading", { name })).toBeVisible()
+    await expect(page.getByRole("link", { name: "Edit" })).toBeVisible()
+    await expect(page.getByRole("button", { name: "More actions" })).toHaveCount(0)
   })
 })
 

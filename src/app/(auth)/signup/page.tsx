@@ -10,7 +10,7 @@ export default function SignUpPage() {
       <div className="space-y-1.5">
         <h1 className="text-2xl font-semibold tracking-tight">Create your account</h1>
         <p className="text-sm text-muted-foreground">
-          New accounts start with staff access. An admin can change your role afterwards.
+          New accounts start with staff access (the first three accounts at a new school are admins). An admin can change your role afterwards.
         </p>
       </div>
       <SignUpForm />

@@ -21,7 +21,7 @@ import { straightLineDepreciation } from "@/lib/depreciation"
 import { daysUntil, formatDate, formatMoney } from "@/lib/format"
 import { annualizedCost, BILLING_CYCLE_LABELS, borrowerLabel, LICENSE_TYPE_LABELS } from "@/lib/labels"
 import { getOrigin } from "@/lib/origin"
-import { can } from "@/lib/permissions"
+import { can, canEditAsset } from "@/lib/permissions"
 import { getAsset, getAssetTimeline, getOpenCheckouts } from "@/lib/queries/assets"
 import { getCategories, getInstitution, getLocations } from "@/lib/queries/settings"
 import { labelUrl } from "@/lib/scan"
@@ -116,7 +116,8 @@ async function AssetDetail({ params }: { params: PageProps<"/inventory/[id]">["p
             }))}
             seatsFull={license?.seats_total != null && openLoans.length >= license.seats_total}
             canCirculate={can(user.role, "circulation.use")}
-            canEdit={can(user.role, "assets.write")}
+            canEdit={canEditAsset(user.role, user.id, asset.created_by)}
+            canManage={can(user.role, "assets.write")}
             isAdmin={user.role === "admin"}
             locations={locations.map((l) => ({ value: l.id, label: l.name }))}
             defaultLoanDays={institution.default_loan_days}

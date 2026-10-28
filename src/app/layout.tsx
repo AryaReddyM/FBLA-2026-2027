@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next"
-import { Geist_Mono, Inter } from "next/font/google"
+import { Atkinson_Hyperlegible, Geist_Mono, Inter, Lexend } from "next/font/google"
 
 import { DisplayPreferences } from "@/components/a11y/display-preferences"
 import { PREFERENCES_SCRIPT } from "@/components/a11y/preferences-script"
@@ -13,6 +13,15 @@ import "./globals.css"
 // domain, so the app still looks right with no internet at the venue.
 const sans = Inter({ variable: "--font-sans", subsets: ["latin"] })
 const mono = Geist_Mono({ variable: "--font-mono", subsets: ["latin"] })
+// Optional reading fonts from the Display preferences panel. preload: false
+// means a browser only downloads one if someone actually switches to it.
+const hyperlegible = Atkinson_Hyperlegible({
+  variable: "--font-hyperlegible",
+  subsets: ["latin"],
+  weight: ["400", "700"],
+  preload: false,
+})
+const lexend = Lexend({ variable: "--font-lexend", subsets: ["latin"], preload: false })
 
 export const metadata: Metadata = {
   title: { default: APP_NAME, template: `%s · ${APP_NAME}` },
@@ -31,7 +40,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     // suppressHydrationWarning: the preferences script changes <html>'s class
     // and attributes before React loads, which is intentional.
-    <html lang="en" suppressHydrationWarning className={`${sans.variable} ${mono.variable}`}>
+    <html lang="en" suppressHydrationWarning className={`${sans.variable} ${mono.variable} ${hyperlegible.variable} ${lexend.variable}`}>
       <head>
         <script dangerouslySetInnerHTML={{ __html: PREFERENCES_SCRIPT }} />
       </head>

@@ -1,11 +1,12 @@
 import { format } from "date-fns"
-import { ArrowLeftRight, CalendarClock, FileBarChart, Gauge, PlusSquare, ScanLine, ShieldAlert } from "lucide-react"
+import { ArrowLeftRight, CalendarClock, Gauge, PlusSquare, ScanLine, ShieldAlert } from "lucide-react"
 import Link from "next/link"
 import { Suspense } from "react"
 
 import { BarChartCard } from "@/components/dashboard/bar-chart-card"
 import { DueSoonBadge, OverdueBadge } from "@/components/inventory/status-badge"
 import { Timeline } from "@/components/inventory/timeline"
+import { AnnualSummaryButton } from "@/components/reports/annual-summary-button"
 import { HeroSearch } from "@/components/inventory/hero-search"
 import { PageContainer, PageHeader, PageHeaderSkeleton, StatStrip } from "@/components/layout/page-header"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -61,13 +62,14 @@ async function Dashboard({ searchParams }: { searchParams: PageProps<"/">["searc
 function QuickActions({ user }: { user: CurrentUser }) {
   return (
     <>
-      {can(user.role, "assets.write") ? (
+      {can(user.role, "assets.create") ? (
         <Button asChild>
           <Link href="/inventory/new">
-            <PlusSquare aria-hidden="true" /> Register item
+            <PlusSquare aria-hidden="true" /> Add inventory
           </Link>
         </Button>
       ) : null}
+      <AnnualSummaryButton role={user.role} />
       {can(user.role, "circulation.use") ? (
         <>
           <Button variant="outline" asChild>
@@ -82,13 +84,6 @@ function QuickActions({ user }: { user: CurrentUser }) {
           </Button>
         </>
       ) : null}
-      {can(user.role, "reports.all") ? (
-        <Button variant="outline" asChild>
-          <Link href="/reports?type=annual_inventory">
-            <FileBarChart aria-hidden="true" /> Annual report
-          </Link>
-        </Button>
-      ) : null}
     </>
   )
 }
@@ -102,6 +97,7 @@ async function Stats({ user, denied }: { user: CurrentUser; denied: boolean }) {
     can(user.role, "impact.view") ? getImpactMetrics() : Promise.resolve(null),
   ])
 
+  const available = stats.by_status.find((s) => s.status === "available")?.count ?? 0
   const monthData = (stats.checkouts_by_month ?? []).map((m) => ({
     label: format(new Date(`${m.month}-01T00:00`), "MMM"),
     value: m.count,
@@ -119,24 +115,25 @@ async function Stats({ user, denied }: { user: CurrentUser; denied: boolean }) {
             href: "/inventory",
           },
           {
+            label: "Available now",
+            value: formatNumber(available),
+            hint: stats.total_assets
+              ? `${Math.round((available / stats.total_assets) * 100)}% of items ready to lend`
+              : "0% of items",
+            href: "/inventory?status=available",
+          },
+          {
+            label: "Digital access",
+            value: formatNumber(stats.digital_assets),
+            hint: `${formatNumber(stats.seats_assigned)} seats assigned · ${formatNumber(stats.licenses_expiring_30)} renewing soon`,
+            href: "/licenses",
+          },
+          {
             label: "Checked out now",
             value: formatNumber(stats.checked_out),
-            hint: `${formatNumber(stats.seats_assigned)} digital seats assigned`,
-            href: "/inventory?status=checked_out",
-          },
-          {
-            label: "Overdue",
-            value: formatNumber(stats.overdue),
-            hint: stats.overdue ? "Past their due date" : "Nothing overdue",
+            hint: stats.overdue ? `${formatNumber(stats.overdue)} overdue` : "Nothing overdue",
             tone: stats.overdue ? "danger" : undefined,
             href: "/circulation",
-          },
-          {
-            label: "Renewing ≤ 30 days",
-            value: formatNumber(stats.licenses_expiring_30),
-            hint: `${formatNumber(renewals.length)} within 60 days`,
-            tone: stats.licenses_expiring_30 ? "warning" : undefined,
-            href: "/licenses",
           },
           {
             label: "Catalog value",

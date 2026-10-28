@@ -201,7 +201,8 @@ Enable extensions: `pg_trgm`, `unaccent`.
 |---|:-:|:-:|:-:|:-:|
 | View catalog, dashboard, item details | ✓ | ✓ | ✓ | ✓ |
 | Check out / check in | ✓ | ✓ | ✓ | |
-| Register, edit assets | ✓ | ✓ | | |
+| Register (add) assets | ✓ | ✓ | ✓ | |
+| Edit assets | ✓ | ✓ | items they added | |
 | Retire / mark lost | ✓ | ✓ | | |
 | Generate and export reports | ✓ | ✓ | own checkouts only | |
 | Import CSV | ✓ | ✓ | | |
@@ -212,7 +213,7 @@ Enable extensions: `pg_trgm`, `unaccent`.
 Rules:
 - RLS policies implement this table. `src/lib/permissions.ts` mirrors it only to hide buttons in the UI.
 - Every Server Action re-checks the session and validates input with Zod before touching the DB.
-- New sign-ups default to `staff`. Only admins change roles. The first user created by the seed script is the admin.
+- New sign-ups default to `staff`, except that the first three accounts in a project become admins. Only admins change roles.
 
 ## 8. Features and Pages
 

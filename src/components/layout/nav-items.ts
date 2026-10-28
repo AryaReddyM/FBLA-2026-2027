@@ -55,7 +55,7 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       PRIMARY_NAV[0],
       PRIMARY_NAV[1],
-      { title: "Register item", href: "/inventory/new", icon: PlusSquare, permission: "assets.write" },
+      { title: "Add inventory", href: "/inventory/new", icon: PlusSquare, permission: "assets.create" },
       { title: "Circulation desk", href: "/circulation", icon: ArrowLeftRight, permission: "circulation.use" },
       { title: "Digital licenses", href: "/licenses", icon: KeyRound },
     ],

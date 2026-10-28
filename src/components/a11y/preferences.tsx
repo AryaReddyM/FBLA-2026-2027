@@ -2,28 +2,49 @@
 
 import { useCallback, useSyncExternalStore } from "react"
 
-import { PREF_KEYS as KEYS } from "./preferences-script"
+import { HTML_ATTRIBUTE_PREFS, PREF_KEYS as KEYS } from "./preferences-script"
 
-// Display preferences from the accessibility panel: text size, color and
-// contrast, light/dark theme, and reduced motion. They're saved in
+// Display preferences from the accessibility panel. They're saved in
 // localStorage AND a cookie; the inline script in preferences-script.ts reads
 // them before the first paint so the page never flashes the wrong look.
 
+type AttrPrefs = typeof HTML_ATTRIBUTE_PREFS
+
 export type ThemePref = "light" | "dark" | "system"
-export type ContrastPref = "normal" | "high" | "colorsafe"
-export type TextSizePref = "100" | "115" | "130" | "150"
-export type MotionPref = "auto" | "reduce"
+export type ContrastPref = AttrPrefs["contrast"]["values"][number]
+export type TextSizePref = AttrPrefs["textSize"]["values"][number]
+export type MotionPref = AttrPrefs["motion"]["values"][number]
+export type FontPref = AttrPrefs["font"]["values"][number]
+export type SpacingPref = AttrPrefs["spacing"]["values"][number]
+export type LinksPref = AttrPrefs["links"]["values"][number]
+export type FocusPref = AttrPrefs["focus"]["values"][number]
+export type GuidePref = "off" | "on"
 
 export type Preferences = {
   theme: ThemePref
   contrast: ContrastPref
   textSize: TextSizePref
   motion: MotionPref
+  font: FontPref
+  spacing: SpacingPref
+  links: LinksPref
+  focus: FocusPref
+  guide: GuidePref
 }
 
-export const TEXT_SIZES: TextSizePref[] = ["100", "115", "130", "150"]
+export const TEXT_SIZES = HTML_ATTRIBUTE_PREFS.textSize.values
 
-export const DEFAULT_PREFERENCES: Preferences = { theme: "system", contrast: "normal", textSize: "100", motion: "auto" }
+export const DEFAULT_PREFERENCES: Preferences = {
+  theme: "system",
+  contrast: "normal",
+  textSize: "100",
+  motion: "auto",
+  font: "default",
+  spacing: "normal",
+  links: "default",
+  focus: "default",
+  guide: "off",
+}
 
 function readStored(key: string): string | null {
   if (typeof document === "undefined") return null
@@ -45,15 +66,25 @@ function writeStored(key: string, value: string) {
   }
 }
 
+/** Returns the stored value if it's one of the allowed ones, otherwise the default. */
+function pick<T extends string>(key: string, allowed: readonly T[], fallback: T): T {
+  const value = readStored(key)
+  return allowed.includes(value as T) ? (value as T) : fallback
+}
+
 function readAll(): Preferences {
-  const theme = readStored(KEYS.theme)
-  const contrast = readStored(KEYS.contrast)
-  const textSize = readStored(KEYS.textSize)
+  const attr = <K extends keyof AttrPrefs>(k: K) =>
+    pick(KEYS[k], HTML_ATTRIBUTE_PREFS[k].values, HTML_ATTRIBUTE_PREFS[k].values[0]) as Preferences[K]
   return {
-    theme: theme === "light" || theme === "dark" ? theme : "system",
-    contrast: contrast === "high" || contrast === "colorsafe" ? contrast : "normal",
-    textSize: TEXT_SIZES.includes(textSize as TextSizePref) ? (textSize as TextSizePref) : "100",
-    motion: readStored(KEYS.motion) === "reduce" ? "reduce" : "auto",
+    theme: pick(KEYS.theme, ["light", "dark", "system"] as const, "system"),
+    contrast: attr("contrast"),
+    textSize: attr("textSize"),
+    motion: attr("motion"),
+    font: attr("font"),
+    spacing: attr("spacing"),
+    links: attr("links"),
+    focus: attr("focus"),
+    guide: pick(KEYS.guide, ["off", "on"] as const, "off"),
   }
 }
 
@@ -66,12 +97,11 @@ function apply(prefs: Preferences) {
   const dark = prefs.theme === "dark" || (prefs.theme === "system" && systemPrefersDark())
   root.classList.toggle("dark", dark)
   root.style.colorScheme = dark ? "dark" : "light"
-  if (prefs.contrast === "normal") root.removeAttribute("data-contrast")
-  else root.setAttribute("data-contrast", prefs.contrast)
-  if (prefs.textSize === "100") root.removeAttribute("data-text-size")
-  else root.setAttribute("data-text-size", prefs.textSize)
-  if (prefs.motion === "reduce") root.setAttribute("data-motion", "reduce")
-  else root.removeAttribute("data-motion")
+  for (const [key, { attr, values }] of Object.entries(HTML_ATTRIBUTE_PREFS)) {
+    const value = prefs[key as keyof AttrPrefs]
+    if (value === values[0]) root.removeAttribute(attr)
+    else root.setAttribute(attr, value)
+  }
 }
 
 // A tiny external store so every component sees the same preferences and

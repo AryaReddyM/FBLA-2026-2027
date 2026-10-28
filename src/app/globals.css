@@ -275,6 +275,50 @@ html[data-text-size="150"] {
   font-size: 150%;
 }
 
+/*
+ * Reading font. Atkinson Hyperlegible was designed (by the Braille Institute)
+ * so similar letters like I/l/1 and O/0 are easy to tell apart for low-vision
+ * readers; Lexend was designed to reduce visual stress while reading.
+ */
+html[data-font="hyperlegible"] {
+  --font-sans: var(--font-hyperlegible);
+}
+html[data-font="lexend"] {
+  --font-sans: var(--font-lexend);
+}
+
+/*
+ * Wider text spacing, the adjustments WCAG 1.4.12 (Text Spacing) says a page
+ * must survive: taller lines, more space between letters, words and paragraphs.
+ */
+html[data-spacing="wide"] body * {
+  line-height: 1.7 !important;
+  letter-spacing: 0.04em !important;
+  word-spacing: 0.14em !important;
+}
+html[data-spacing="wide"] p + p {
+  margin-top: 1em;
+}
+
+/* Underline every link, not just the ones in sentences. */
+html[data-links="underline"] a:not([data-slot="button"]) {
+  text-decoration: underline !important;
+  text-underline-offset: 0.2em;
+}
+
+/*
+ * Stronger focus outline: a thick two-tone ring (lime inside, dark outside)
+ * that stays visible on white cards and on the dark green bands alike.
+ */
+html[data-focus="strong"] :focus-visible {
+  outline: 3px solid var(--lime) !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 6px var(--foreground) !important;
+}
+html.dark[data-focus="strong"] :focus-visible {
+  box-shadow: 0 0 0 6px var(--background) !important;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

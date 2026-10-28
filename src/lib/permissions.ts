@@ -9,6 +9,7 @@ export type Role = Enums<"user_role">
 export type Permission =
   | "catalog.view"
   | "circulation.use"
+  | "assets.create"
   | "assets.write"
   | "assets.retire"
   | "reports.all"
@@ -23,6 +24,9 @@ export type Permission =
 const MATRIX: Record<Permission, readonly Role[]> = {
   "catalog.view": ["admin", "manager", "staff", "viewer"],
   "circulation.use": ["admin", "manager", "staff"],
+  // Anyone who works with inventory can add items (owner request, Oct 2026).
+  "assets.create": ["admin", "manager", "staff"],
+  // Editing ANY item, bulk changes. Staff can still edit items they added (see canEditAsset).
   "assets.write": ["admin", "manager"],
   "assets.retire": ["admin", "manager"],
   "reports.all": ["admin", "manager"],
@@ -39,6 +43,18 @@ export function can(role: Role | null | undefined, permission: Permission): bool
   return role != null && MATRIX[permission].includes(role)
 }
 
+/**
+ * Can this person edit this particular item? Admins and managers can edit any
+ * item; staff can edit the ones they added. Mirrors the RLS update policy.
+ */
+export function canEditAsset(
+  role: Role | null | undefined,
+  userId: string,
+  createdBy: string | null | undefined,
+): boolean {
+  return can(role, "assets.write") || (role === "staff" && !!createdBy && createdBy === userId)
+}
+
 export const ROLE_LABELS: Record<Role, string> = {
   admin: "Admin",
   manager: "Manager",
@@ -49,6 +65,6 @@ export const ROLE_LABELS: Record<Role, string> = {
 export const ROLE_DESCRIPTIONS: Record<Role, string> = {
   admin: "Everything, including users, roles, categories, locations and settings.",
   manager: "Register, edit and retire items, run all reports, import, view the audit log.",
-  staff: "Check items in and out, and report on their own checkouts.",
+  staff: "Add items and edit the ones they added, check items in and out, and report on their own checkouts.",
   viewer: "Read-only access to the catalog and dashboard.",
 }

@@ -55,6 +55,8 @@ type Props = {
   locations: { value: string; label: string }[]
   nextTag: string | null
   canEditTag: boolean
+  /** Admins/managers can set Retired or Lost; staff can't. */
+  canRetire: boolean
   /** Edit mode: an item out on loan keeps its status until checked in. */
   lockedStatus?: Enums<"asset_status"> | null
 }
@@ -86,6 +88,7 @@ export function AssetForm({
   locations,
   nextTag,
   canEditTag,
+  canRetire,
   lockedStatus,
 }: Props) {
   const router = useRouter()
@@ -405,7 +408,7 @@ export function AssetForm({
                 control={control}
                 name="status"
                 label="Status"
-                options={options(STATUS_LABELS, EDITABLE_STATUSES)}
+                options={options(STATUS_LABELS, canRetire ? EDITABLE_STATUSES : ["available", "in_repair"])}
               />
             )}
 

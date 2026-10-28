@@ -66,9 +66,16 @@ describe.skipIf(!configured)("row level security (live database)", () => {
     }
   })
 
-  it("staff cannot insert assets", async () => {
-    const { error } = await staff.from("assets").insert({ name: "RLS test (should fail)", kind: "physical" })
-    expect(error?.message).toMatch(/row-level security/)
+  it("staff can add items, and edit the ones they added, but not retire or delete them", async () => {
+    const { data, error } = await staff.from("assets").insert({ name: "RLS test staff item", kind: "physical" }).select("id").single()
+    expect(error).toBeNull()
+    createdIds.push(data!.id)
+    const { data: edited } = await staff.from("assets").update({ notes: "edited by its owner" }).eq("id", data!.id).select("id")
+    expect(edited).toHaveLength(1)
+    const { error: retireError } = await staff.from("assets").update({ status: "retired" }).eq("id", data!.id)
+    expect(retireError?.message).toMatch(/Only admins and managers/)
+    const { error: deleteError } = await staff.from("assets").update({ deleted_at: new Date().toISOString() }).eq("id", data!.id)
+    expect(deleteError?.message).toMatch(/Only admins can delete/)
   })
 
   it("viewers cannot insert assets", async () => {
@@ -83,7 +90,7 @@ describe.skipIf(!configured)("row level security (live database)", () => {
     createdIds.push(data!.id)
   })
 
-  it("staff cannot edit assets (the update silently matches no rows)", async () => {
+  it("staff cannot edit items someone else added (the update silently matches no rows)", async () => {
     const { data } = await staff.from("assets").update({ name: "hacked" }).eq("id", assetId).select("id")
     expect(data ?? []).toHaveLength(0)
   })
