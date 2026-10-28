@@ -1,0 +1,9 @@
+.next
+.next-school
+node_modules
+src/types/database.ts
+src/components/ui
+supabase/.temp
+playwright-report
+test-results
+package-lock.json
