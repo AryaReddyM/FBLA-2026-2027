@@ -7,7 +7,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest"
 
 import type { Database } from "@/types/database"
 
-import { createTestAccounts, createTestAsset, deleteTestAccounts, testEnv, type TestAccount } from "../support/test-accounts"
+import { createTestAccounts, createTestAsset, deleteTestAccounts, testEnv, testTag, type TestAccount } from "../support/test-accounts"
 
 if (existsSync(".env.local")) process.loadEnvFile(".env.local")
 
@@ -60,7 +60,7 @@ describe.skipIf(!configured)("row level security (live database)", () => {
   })
 
   it("staff can add items, and edit the ones they added, but not retire or delete them", async () => {
-    const { data, error } = await staff.from("assets").insert({ name: "RLS test staff item", kind: "physical" }).select("id").single()
+    const { data, error } = await staff.from("assets").insert({ name: "RLS test staff item", kind: "physical", asset_tag: testTag() }).select("id").single()
     expect(error).toBeNull()
     const { data: edited } = await staff.from("assets").update({ notes: "edited by its owner" }).eq("id", data!.id).select("id")
     expect(edited).toHaveLength(1)

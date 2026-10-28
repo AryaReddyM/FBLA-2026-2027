@@ -226,6 +226,9 @@ isOneToOne: false
             "admin_clear_inventory":
 { Args: Record<PropertyKey, never>; Returns: Json
                            },
+"asset_tag_number":
+{ Args: { "p_prefix": string,"p_tag": string }; Returns: number
+                           },
 "borrower_label":
 { Args: { "p_name": string,"p_ref": string,"p_type": Database["public"]['Enums']["borrower_type"] }; Returns: string
                            },
@@ -248,6 +251,9 @@ isOneToOne: false
 { Args: { "p_exclude_id"?: string,"p_model"?: string,"p_name"?: string,"p_serial"?: string }; Returns: {
               "asset_tag": string,"id": string,"model": string,"name": string,"reason": string,"score": number,"serial_number": string
             }[]
+                           },
+"format_asset_tag":
+{ Args: { "p_number": number,"p_prefix": string }; Returns: string
                            },
 "has_any_role":
 { Args: { "roles": (Database["public"]['Enums']["user_role"])[] }; Returns: boolean

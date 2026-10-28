@@ -13,6 +13,8 @@ export type TestAccount = { role: TestRole; id: string; email: string; password:
 // reserved domain, which makes them easy to find and delete afterwards.
 export const TEST_EMAIL_DOMAIN = "edutrack-tests.example"
 
+export const testTag = () => `TEST-${randomUUID().slice(0, 8).toUpperCase()}`
+
 export function testEnv() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
   const publicKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -48,11 +50,12 @@ export async function createTestAccounts(): Promise<TestAccount[]> {
   return accounts
 }
 
+/** A test item with a throwaway TEST- tag, so tests don't use up the school's real tag numbers. */
 export async function createTestAsset(createdBy: string, name = "Test item") {
   const admin = serviceClient()
   const { data, error } = await admin
     .from("assets")
-    .insert({ name, kind: "physical", created_by: createdBy })
+    .insert({ name, kind: "physical", created_by: createdBy, asset_tag: testTag() })
     .select("id, asset_tag")
     .single()
   if (error || !data) throw new Error(`Couldn't create a test item: ${error?.message}`)

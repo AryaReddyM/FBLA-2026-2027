@@ -68,10 +68,14 @@ test.describe("inventory and circulation (manager)", () => {
     await page.locator("#field-name").fill(name)
     await page.locator("#field-serial_number").fill(serial)
     await page.locator("#field-acquisition_cost").fill("499.00")
+    // A typed tag (like an existing barcode) instead of an auto one, so the test doesn't
+    // use up a real tag number. Typed in lower case to check it's stored in upper case.
+    const typedTag = `test-${Date.now()}`
+    await page.locator("#field-asset_tag").fill(typedTag)
     await page.getByRole("button", { name: "Register item" }).click()
     await expect(page.getByRole("heading", { name })).toBeVisible()
     const tag = (await page.locator("p.font-mono").first().textContent())?.trim() ?? ""
-    expect(tag).toMatch(/^[A-Z0-9]+-\d{4}-\d{6}$/)
+    expect(tag).toBe(typedTag.toUpperCase())
 
     // Duplicate detection on the same serial number
     await page.goto("/inventory/new")

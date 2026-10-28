@@ -101,7 +101,14 @@ export async function lookupAsset(
   let assetId: string | null = null
   if (code?.type === "id") assetId = code.value
   else if (code?.type === "tag") {
-    const { data } = await supabase.from("assets").select("id").ilike("asset_tag", code.value).is("deleted_at", null).maybeSingle()
+    // Tags are always stored in upper case, so an exact match is safe. (ilike would
+    // treat "_" and "%" in a typed tag as wildcards and could match the wrong item.)
+    const { data } = await supabase
+      .from("assets")
+      .select("id")
+      .eq("asset_tag", code.value.trim().toUpperCase())
+      .is("deleted_at", null)
+      .maybeSingle()
     assetId = data?.id ?? null
   }
 

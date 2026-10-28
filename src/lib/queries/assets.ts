@@ -168,7 +168,7 @@ export async function getAssetByTag(tag: string) {
   const { data } = await supabase
     .from("assets")
     .select("id")
-    .ilike("asset_tag", tag.trim())
+    .eq("asset_tag", tag.trim().toUpperCase())
     .is("deleted_at", null)
     .maybeSingle()
   return data
